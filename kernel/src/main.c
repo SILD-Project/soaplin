@@ -63,6 +63,8 @@ static void hcf(void) {
     }
 }
 
+
+
 int init() {
     asm("int $0x80");
     while (1)
@@ -70,6 +72,8 @@ int init() {
 }
 
 struct limine_framebuffer *fb;
+
+char kstack[8192];
 
 // The following will be our kernel's entry point.
 // If renaming kmain() to something else, make sure to change the
@@ -99,7 +103,7 @@ void kmain(void) {
     printf("\n  Soaplin 1.0-sild is booting up your computer...\n\n");
     //printf("Physical kernel EP: %p", entrypoint_request.entry);
     
-    gdt_init();
+    gdt_init(&kstack[8192]);
     idt_init();
 
     sse_init();
@@ -108,15 +112,17 @@ void kmain(void) {
     vmm_init();
 
     pit_init(1000);
-    sched_init();
+    //sched_init();
+    //user_init();
 
-    uint64_t *mem = pmm_request_page();
+    uint8_t *mem = pmm_request_page();
     mem[0] = 0xCD;
     mem[1] = 0x80;
-    mem[2] = 0xFE;
-    mem[3] = 0xEB;
-    sched_process *proc = sched_create("Init", 0x1000, SCHED_USER_PROCESS);
-    vmm_map(proc->pm, 0x1000, (uint64_t)mem, VMM_PRESENT | VMM_USER);
+    mem[2] = 0xF4;
+    //mem[3] = 0xFE;
+    pagemap_t* pm = vmm_alloc_pm();
+    vmm_map(pm, 0x1000, (uint64_t)mem, VMM_PRESENT | VMM_USER);
+    sched_process *proc = sched_create("Init", 0x1000, pm, SCHED_USER_PROCESS);
 
     log("kernel - Soaplin initialized sucessfully.\n");
     while (1)

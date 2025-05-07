@@ -37,5 +37,6 @@ pagemap_t *vmm_alloc_pm();
 void vmm_init();
 void vmm_release_pm(pagemap_t *pm);
 void vmm_load_pagemap(pagemap_t *pm);
+uint64_t vmm_get_flags(pagemap_t* pm, uint64_t vaddr);
 void vmm_map(pagemap_t *pm, uint64_t vaddr, uint64_t paddr, uint64_t flags);
 void vmm_unmap(pagemap_t *pm, uint64_t vaddr) ;

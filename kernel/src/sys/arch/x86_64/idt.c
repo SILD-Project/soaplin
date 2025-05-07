@@ -29,9 +29,15 @@ void idt_init() {
     idtr.limit = (uint16_t)sizeof(idt_entry_t) * 256 - 1;
 
     for (uint16_t vector = 0; vector <= 256; vector++) {
+        if (vector == 0x80)
+            continue; // We skip the syscall handler, since it should be called from user space.
         idt_set_descriptor(vector, isr_stub_table[vector], 0x8E);
         vectors[vector] = 1;
     }
+
+    uint16_t vector = 0x80;
+    idt_set_descriptor(vector, isr_stub_table[vector], 0xEE);
+    vectors[vector] = 1;
 
     pic_init();
     pic_unmask_irq(1);

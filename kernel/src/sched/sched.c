@@ -29,7 +29,7 @@ void sched_init() {
         "mode.\n");
 }
 
-sched_process *sched_create(char *name, uint64_t entry_point, uint32_t flags)
+sched_process *sched_create(char *name, uint64_t entry_point, pagemap_t* pm, uint32_t flags)
 {
     // TODO: implement a separate strlen function
     // as there's like 4 strlen impls in the kernel.
@@ -43,12 +43,13 @@ sched_process *sched_create(char *name, uint64_t entry_point, uint32_t flags)
     memcpy(proc->name, name, i);
     proc->pid = current_pid;
     proc->type = SCHED_RUNNING;
+    proc->flags = flags;
 
     // We are about to setup the registers ourself.
     // If it's broken, it's a boom in the ass of your computer
     // (and a CPU exception)
 
-    proc->pm = vmm_alloc_pm();
+    proc->pm = pm;
 
     uint64_t *stack_phys = pmm_request_page();
     uint64_t *stack_virt = (uint64_t*)0x40000000;
@@ -107,5 +108,5 @@ void schedule(registers_t *regs)
     memcpy(regs, &curr_proc->regs, sizeof(registers_t));
 
     // Finally, load our pagemap
-    //vmm_load_pagemap(curr_proc->pm);
+    vmm_load_pagemap(curr_proc->pm);
 }

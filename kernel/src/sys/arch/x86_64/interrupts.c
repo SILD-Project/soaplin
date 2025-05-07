@@ -39,6 +39,14 @@ void exception_handler(registers_t *regs) {
     if (regs->int_no < 32) {
         //panic(kmode_cpu_exception, regs);
         log("ints - %d (RIP: %p, ERR: %d)\n", regs->int_no, regs->rip, regs->err_code);
+
+        if(regs->int_no == 0xe) {
+            uint64_t cr2;
+            asm ("mov %%cr2, %0" : "=r"(cr2));
+            log("ints - PF: Faulting location: %p\n", cr2);
+            log("ints - PF: Faulting page flags: %p\n", vmm_get_flags(vmm_current_pm, cr2));
+        }
+
         dump_backtrace(regs);
         asm ("cli");
         while (1)
@@ -63,7 +71,9 @@ void exception_handler(registers_t *regs) {
     }
     else if (regs->int_no == 0x80)
     {
-        log("syscall - Hello World! Current process: %s", curr_proc->name);
+        log("syscall - Hello World! Current process: %s\n", curr_proc->name);
+        if (curr_proc->flags == SCHED_USER_PROCESS)
+        log("syscall - Btw we made it to userspace, baby!\n", curr_proc->name);
     }
     //logln(info, "arch/ints", "Received interrupt %d\n", regs->int_no);
     pic_ack(regs->int_no - 32);

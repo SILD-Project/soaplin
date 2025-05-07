@@ -16,6 +16,7 @@ typedef struct _sched_process {
     char name[128];
     int pid;
     int type;
+    int flags;
 
     registers_t regs;
     pagemap_t *pm;
@@ -34,6 +35,6 @@ extern sched_process *proc_list;
 //extern sched_process *idle_process;
 
 void sched_init();
-sched_process *sched_create(char *name, uint64_t entry_point, uint32_t flags);
+sched_process *sched_create(char *name, uint64_t entry_point, pagemap_t *pm, uint32_t flags);
 void sched_exit(sched_process *proc);
 void schedule(registers_t *regs);

@@ -2,6 +2,7 @@
 #include <stdint.h>
 #include <sys/arch/x86_64/gdt.h>
 #include <sys/log.h>
+#include <mm/memop.h>
 
 gdt_table def_table = {
   {
@@ -25,10 +26,10 @@ gdt_table def_table = {
 
 tssr tss_list[256]; // One tssr per CPU
 
-void gdt_init() {
+void gdt_init( char* kstack ) {
 
   // TODO: adapt for multiprocessor kernel
-  tss_list[0].iopb = sizeof(tssr);
+  tss_list[0].rsp[0] = (uint64_t)kstack;
   uintptr_t tss = (uintptr_t)&tss_list[0];
 
   def_table.tss_entry.length = sizeof(tss_entry);

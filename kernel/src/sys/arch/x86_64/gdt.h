@@ -26,7 +26,7 @@ typedef struct {
 
 typedef struct {
   uint32_t resv;
-  uint64_t rsp[3];
+  uint64_t rsp[4];
   uint64_t resv1;
   uint64_t ist[7];
   uint64_t resv2;
@@ -34,4 +34,4 @@ typedef struct {
   uint16_t iopb;
 } __attribute__((packed)) tssr; // Per CPU
 
-void gdt_init();
+void gdt_init(char* kstack);
