@@ -73,7 +73,8 @@ void exception_handler(registers_t *regs) {
     {
         log("syscall - Hello World! Current process: %s\n", curr_proc->name);
         if (curr_proc->flags == SCHED_USER_PROCESS)
-        log("syscall - Btw we made it to userspace, baby!\n", curr_proc->name);
+            log("syscall - Btw we made it to userspace, baby!\n", curr_proc->name);
+    
     }
     //logln(info, "arch/ints", "Received interrupt %d\n", regs->int_no);
     pic_ack(regs->int_no - 32);

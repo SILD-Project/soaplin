@@ -21,5 +21,6 @@ void rtc_init() {
 }
 
 void rtc_handle_interrupt(registers_t *regs) {
+    (void)regs;
     printf("RTC!\n");
 }

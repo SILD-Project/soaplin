@@ -80,9 +80,9 @@ char kstack[8192];
 // linker script accordingly.
 void kmain(void) {
     // Ensure the bootloader actually understands our base revision (see spec).
-    if (LIMINE_BASE_REVISION_SUPPORTED == false) {
+    /*if (LIMINE_BASE_REVISION_SUPPORTED == false) {
         hcf();
-    }
+    }*/
 
     // Ensure we got a framebuffer.
     if (framebuffer_request.response == NULL
@@ -118,11 +118,13 @@ void kmain(void) {
     uint8_t *mem = pmm_request_page();
     mem[0] = 0xCD;
     mem[1] = 0x80;
-    mem[2] = 0xF4;
+    //mem[2] = 0xF4;
+
     //mem[3] = 0xFE;
     pagemap_t* pm = vmm_alloc_pm();
     vmm_map(pm, 0x1000, (uint64_t)mem, VMM_PRESENT | VMM_USER);
-    sched_process *proc = sched_create("Init", 0x1000, pm, SCHED_USER_PROCESS);
+    sched_create("Init", 0x1000, pm, SCHED_USER_PROCESS);
+
 
     log("kernel - Soaplin initialized sucessfully.\n");
     while (1)

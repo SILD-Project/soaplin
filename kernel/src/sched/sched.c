@@ -56,10 +56,12 @@ sched_process *sched_create(char *name, uint64_t entry_point, pagemap_t* pm, uin
 
     if (flags == SCHED_KERNEL_PROCESS) {
         proc->stack_base = stack_phys;
+        proc->stack_base_physical = stack_phys;
         proc->stack_end = proc_list->stack_base + PMM_PAGE_SIZE;
     } else if (flags == SCHED_USER_PROCESS) {
         vmm_map(proc->pm, (uint64_t)stack_virt, (uint64_t)stack_phys, VMM_PRESENT | VMM_WRITABLE | VMM_USER);
         proc->stack_base = stack_virt;
+        proc->stack_base_physical = stack_phys;
         proc->stack_end = proc_list->stack_base + PMM_PAGE_SIZE;
     }
     proc->regs.rip = (uint64_t)entry_point;
@@ -91,11 +93,33 @@ sched_process *sched_create(char *name, uint64_t entry_point, pagemap_t* pm, uin
     return proc;
 }
 
+void sched_exit(int exit_code) {
+    log("sched - Process %d exited with code %d!", curr_proc->pid, exit_code);
+    curr_proc->type = SCHED_DIED;
+    schedule(&curr_proc->regs);
+}
+
 void schedule(registers_t *regs)
 {
     if (standby) {
         //log("sched - Sched is in standby.\n");
         return;
+    }
+
+    if (curr_proc->type == SCHED_DIED) {
+        sched_process *prev_proc = proc_list;
+        while (prev_proc->next != curr_proc) {
+            prev_proc = prev_proc->next;
+        }
+
+        prev_proc->next = curr_proc->next;
+
+        // Now, it is safe to free the process's memory.
+        vmm_release_pm(curr_proc->pm);
+        pmm_free_page(curr_proc->stack_base_physical);
+
+        // R.I.P. process
+        pmm_free_page(curr_proc);
     }
 
     memcpy(&curr_proc->regs, regs, sizeof(registers_t));

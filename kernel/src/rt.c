@@ -53,7 +53,7 @@ void rt_print(char *str) {
 
     for (int i = 0; i < _rt_strlen(str); i++) {
         if (str[i] == '\n' && _curctx.use_crlf_ending)
-            if (_curctx.y * 16 >= _curctx.framebuffer_height) {
+            if (_curctx.y * 16 >= (int)_curctx.framebuffer_height) {
                 _curctx.y = 0;
                 memset(
                     _curctx.framebuffer, _curctx.bg_color,
@@ -63,7 +63,7 @@ void rt_print(char *str) {
             }
         else if (str[i] == '\n')
         {
-            if (_curctx.y * 16 >= _curctx.framebuffer_height) {
+            if (_curctx.y * 16 >= (int)_curctx.framebuffer_height) {
                 _curctx.y = 0;
                 memset(
                     _curctx.framebuffer, _curctx.bg_color,
