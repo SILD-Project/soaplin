@@ -171,6 +171,21 @@ uint64_t vmm_get_flags(pagemap_t* pm, uint64_t vaddr) {
     return pml1[pml1_entry] & 0x7000000000000FFF;
 }
   
+uint64_t virt_to_phys(pagemap_t *pagemap, uint64_t virt)
+{
+    uint64_t pml1_idx = (virt & (uint64_t)0x1ff << 12) >> 12;
+    uint64_t pml2_idx = (virt & (uint64_t)0x1ff << 21) >> 21;
+    uint64_t pml3_idx = (virt & (uint64_t)0x1ff << 30) >> 30;
+    uint64_t pml4_idx = (virt & (uint64_t)0x1ff << 39) >> 39;
+
+    uint64_t *pml3 = __vmm_get_next_lvl(pagemap->toplevel, pml4_idx, 0);
+    uint64_t *pml2 = __vmm_get_next_lvl(pml3, pml3_idx, 0);
+    uint64_t *pml1 = __vmm_get_next_lvl(pml2, pml2_idx, 0);
+    uint64_t phys_addr = pml1[pml1_idx] & 0x000FFFFFFFFFF000;
+
+    return phys_addr;
+}
+
 void vmm_map(pagemap_t *pm, uint64_t vaddr, uint64_t paddr, uint64_t flags) {
     uint64_t pml4_entry = (vaddr >> 39) & 0x1ff;
     uint64_t pml3_entry = (vaddr >> 30) & 0x1ff;
