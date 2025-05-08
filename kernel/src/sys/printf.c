@@ -2,7 +2,6 @@
 // This code is part of the Soaplin kernel and is licensed under the terms of
 // the MIT License.
 #include "sys/gfx/flanterm/flanterm.h"
-#include <rt.h>
 #include <stdarg.h>
 
 #define NANOPRINTF_USE_FIELD_WIDTH_FORMAT_SPECIFIERS 1

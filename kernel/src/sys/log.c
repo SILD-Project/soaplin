@@ -1,4 +1,3 @@
-#include "rt.h"
 #include "sys/arch/x86_64/io.h"
 #include "sys/gfx/flanterm/flanterm.h"
 #include <stdarg.h>
