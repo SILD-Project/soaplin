@@ -87,35 +87,27 @@ void kmain(void) {
     }*/
 
     // Ensure we got a framebuffer.
-    if (framebuffer_request.response == NULL
-     || framebuffer_request.response->framebuffer_count < 1) {
-        hcf();
-    }
+    if (framebuffer_request.response != NULL) {
+        
+        // Fetch the first framebuffer.
+        struct limine_framebuffer *framebuffer = framebuffer_request.response->framebuffers[0];
+        fb = framebuffer;
 
-    // Fetch the first framebuffer.
-    struct limine_framebuffer *framebuffer = framebuffer_request.response->framebuffers[0];
-    fb = framebuffer;
-    ((uint32_t*)fb->address)[0] = 0xFFFFFF;
-
-    ft_ctx = flanterm_fb_init(
-        NULL,
-        NULL,
-        framebuffer->address, framebuffer->width, framebuffer->height, framebuffer->pitch,
-        framebuffer->red_mask_size, framebuffer->red_mask_shift,
-        framebuffer->green_mask_size, framebuffer->green_mask_shift,
-        framebuffer->blue_mask_size, framebuffer->blue_mask_shift,
-        NULL,
-        NULL, NULL,
-        NULL, &fg,
-        NULL, NULL,
-        VGA8, 8, 16, 0,
-        0, 0,
-        0
-    );
-
-    if (!ft_ctx) {
-        asm("cli");
-        asm("hlt");
+        ft_ctx = flanterm_fb_init(
+            NULL,
+            NULL,
+            framebuffer->address, framebuffer->width, framebuffer->height, framebuffer->pitch,
+            framebuffer->red_mask_size, framebuffer->red_mask_shift,
+            framebuffer->green_mask_size, framebuffer->green_mask_shift,
+            framebuffer->blue_mask_size, framebuffer->blue_mask_shift,
+            NULL,
+            NULL, NULL,
+            NULL, &fg,
+            NULL, NULL,
+            VGA8, 8, 16, 0,
+            0, 0,
+            0
+        );
     }
 
     printf("\n  Soaplin 1.0-sild is booting up your computer...\n\n");
@@ -126,10 +118,6 @@ void kmain(void) {
     fpu_activate();
 
     sse_init();
-
-float hi = 0.1;
-hi = hi + 1.1;
-log("fp: %2.6f\n", hi);
 
     pmm_init();
     vmm_init();

@@ -26,5 +26,7 @@ void printf(char *format, ...) {
 
     //rt_print(buf);
     int i = 0; for (i; buf[i] != 0; i++);;
-    flanterm_write(ft_ctx, buf, i);
+
+    if (ft_ctx)
+        flanterm_write(ft_ctx, buf, i);
 }
