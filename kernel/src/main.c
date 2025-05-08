@@ -3,6 +3,7 @@
 #include "mm/pmm.h"
 #include "mm/vma.h"
 #include "mm/vmm.h"
+#include "mm/liballoc/liballoc.h"
 #include "mm/memop.h"
 #include "rt.h"
 #include "sched/sched.h"
@@ -130,6 +131,11 @@ void kmain(void) {
         while (1)
             asm("hlt");
     }
+
+    char *a = kmalloc(1);
+    *a = 32;
+    log("Allocated 1 byte at 0x%.16llx\n", (uint64_t)a);
+    kfree(a);
 
     pit_init(1000);
     sched_init();

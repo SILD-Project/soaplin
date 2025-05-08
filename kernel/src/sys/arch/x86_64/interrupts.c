@@ -47,7 +47,7 @@ void exception_handler(registers_t *regs) {
             log("ints - PF: Faulting page flags: %p\n", vmm_get_flags(vmm_current_pm, cr2));
         }
 
-        dump_backtrace(regs);
+        // dump_backtrace(regs);
         asm ("cli");
         while (1)
             asm ("hlt");

@@ -152,9 +152,10 @@ static uint64_t *__vmm_get_next_lvl(uint64_t *level, uint64_t entry, uint64_t fl
     if (!(level[entry] & 1)){
         uint64_t *pml = HIGHER_HALF(pmm_request_page());
         memset(pml, 0, PMM_PAGE_SIZE);
-        level[entry] = (uint64_t)PHYSICAL(pml);
+        level[entry] = ((uint64_t)PHYSICAL(pml) & 0x000FFFFFFFFFF000ULL) | flags;
+    } else {
+        level[entry] |= (flags & ~VMM_NX) & 0xFF;
     }
-    level[entry] |= (flags & 0xFFF); // N'ajoute que les flags pertinents
     return HIGHER_HALF(PTE_GET_ADDR(level[entry]));
 }
 
