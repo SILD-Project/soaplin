@@ -1,6 +1,9 @@
 // Copyright: Durand Miller <clutter@djm.co.za>
 #include <mm/liballoc/liballoc.h>
 
+// very dirty way of disabling logging in liballoc
+#define log(...) (void)0
+
 #define VERSION "1.1"
 #define ALIGNMENT 16ul
 
