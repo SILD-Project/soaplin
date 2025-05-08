@@ -1,29 +1,23 @@
 #include "exec/elf.h"
-#include "font.h"
 #include "mm/pmm.h"
 #include "mm/vma.h"
 #include "mm/vmm.h"
 #include "mm/liballoc/liballoc.h"
-#include "mm/memop.h"
-#include "rt.h"
 #include "sched/sched.h"
-#include "sys/arch/x86_64/cpuid.h"
-#include "sys/arch/x86_64/io.h"
 #include "sys/arch/x86_64/pit.h"
-#include "sys/arch/x86_64/rtc.h"
 #include "sys/arch/x86_64/sse.h"
 #include <sys/log.h>
 #include <stdint.h>
 #include <stddef.h>
 #include <stdbool.h>
 #include <limine.h>
-
 #include <sys/printf.h>
 #include <sys/arch/x86_64/gdt.h>
 #include <sys/arch/x86_64/idt.h>
-
-#define SSFN_IMPLEMENTATION        /* use the special renderer for 32 bit truecolor packed pixels */
-#include <sys/gfx/ssfn.h>
+#include <sys/arch/x86_64/fpu.h>
+#include <sys/gfx/flanterm/flanterm.h>
+#include <sys/gfx/flanterm/backends/fb.h>
+#include <font.h>
 
 // Set the base revision to 3, this is recommended as this is the latest
 // base revision described by the Limine boot protocol specification.
@@ -77,15 +71,9 @@ static void hcf(void) {
     }
 }
 
-
-
-int init() {
-    asm("int $0x80");
-    while (1)
-        ;;
-}
-
 struct limine_framebuffer *fb;
+struct flanterm_context *ft_ctx;
+uint32_t fg = 0xFFFFFF;
 
 char kstack[8192];
 
@@ -107,20 +95,41 @@ void kmain(void) {
     // Fetch the first framebuffer.
     struct limine_framebuffer *framebuffer = framebuffer_request.response->framebuffers[0];
     fb = framebuffer;
+    ((uint32_t*)fb->address)[0] = 0xFFFFFF;
 
-    rt_context ctx;
-    ctx.framebuffer = fb->address;
-    ctx.framebuffer_width = fb->width;
-    ctx.framebuffer_height = fb->height;
-    rt_init(ctx);
+    ft_ctx = flanterm_fb_init(
+        NULL,
+        NULL,
+        framebuffer->address, framebuffer->width, framebuffer->height, framebuffer->pitch,
+        framebuffer->red_mask_size, framebuffer->red_mask_shift,
+        framebuffer->green_mask_size, framebuffer->green_mask_shift,
+        framebuffer->blue_mask_size, framebuffer->blue_mask_shift,
+        NULL,
+        NULL, NULL,
+        NULL, &fg,
+        NULL, NULL,
+        VGA8, 8, 16, 0,
+        0, 0,
+        0
+    );
+
+    if (!ft_ctx) {
+        asm("cli");
+        asm("hlt");
+    }
 
     printf("\n  Soaplin 1.0-sild is booting up your computer...\n\n");
     //printf("Physical kernel EP: %p", entrypoint_request.entry);
     
     gdt_init(&kstack[8192]);
     idt_init();
+    fpu_activate();
 
     sse_init();
+
+float hi = 0.1;
+hi = hi + 1.1;
+log("fp: %2.6f\n", hi);
 
     pmm_init();
     vmm_init();
@@ -132,10 +141,10 @@ void kmain(void) {
             asm("hlt");
     }
 
-    char *a = kmalloc(1);
+    char *a = malloc(1);
     *a = 32;
     log("Allocated 1 byte at 0x%.16llx\n", (uint64_t)a);
-    kfree(a);
+    free(a);
 
     pit_init(1000);
     sched_init();
@@ -146,48 +155,7 @@ void kmain(void) {
 
     elf_load((char*)f->address);
 
-    memset(framebuffer->address, 0, framebuffer->pitch * framebuffer->height);
-
-    ssfn_t sctx = { 0 };                                 /* the renderer context */
-    ssfn_buf_t buf = {                                  /* the destination pixel buffer */
-        .ptr = framebuffer->address,                      /* address of the buffer */
-        .w = framebuffer->width,                             /* width */
-        .h = framebuffer->height,                             /* height */
-        .p = framebuffer->pitch,                         /* bytes per line */
-        .x = 100,                                       /* pen position */
-        .y = 100,
-        .fg = 0xFF808080                                /* foreground color */
-    };
-    
-    /* add one or more fonts to the context. Fonts must be already in memory */
-    ssfn_load(&sctx, &NotoRegular);
-    
-    /* select the typeface to use */
-    ssfn_select(&sctx,
-        SSFN_FAMILY_SANS, NULL,                        /* family */
-        SSFN_STYLE_REGULAR | SSFN_STYLE_UNDERLINE,      /* style */
-        64                                              /* size */
-    );
-    
-    /* rasterize the first glyph in an UTF-8 string into a 32 bit packed pixel buffer */
-    /* returns how many bytes were consumed from the string */
-    ssfn_render(&sctx, &buf, "Hello World.");
-
-    /* free resources */
-    ssfn_free(&sctx); 
-    
-
-    //uint8_t *mem = pmm_request_page();
-    //mem[0] = 0xCD;
-    //mem[1] = 0x80;
-    //mem[2] = 0xF4;
-
-    //mem[3] = 0xFE;
-    //pagemap_t* pm = vmm_alloc_pm();
-    //vmm_map(pm, 0x1000, (uint64_t)mem, VMM_PRESENT | VMM_USER);
-    //sched_create("Init", 0x1000, pm, SCHED_USER_PROCESS);
-
-    //log("kernel - Soaplin initialized sucessfully.\n");
+    log("kernel - Soaplin initialized sucessfully.\n");
     while (1)
         ;;//__asm__ volatile ("hlt");
 }

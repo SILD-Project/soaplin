@@ -1,11 +1,16 @@
 #include "rt.h"
 #include "sys/arch/x86_64/io.h"
+#include "sys/gfx/flanterm/flanterm.h"
 #include <stdarg.h>
 #include <sys/printf.h>
 
+extern struct flanterm_context *ft_ctx;
+
 void log(char *format, ...) {
     // TODO: replace this call with a call to printf() when the RTC is implemented.
-    rt_print("1970-01-01 00:00:00 | ");
+    char *date = "1970-01-01 00:00:00 | ";
+    int i2 = 0; for (i2; date[i2] != 0; i2++);;
+    flanterm_write(ft_ctx, date, i2);
 
     char buf[2048];
     va_list l;
@@ -13,9 +18,9 @@ void log(char *format, ...) {
     npf_vsnprintf(buf, 2048, format, l);
     va_end(l);
 
-    rt_print(buf);
+    int i = 0; for (i; buf[i] != 0; i++);;
+    flanterm_write(ft_ctx, buf, i);
 
-    char *date = "1970-01-01 00:00:00 | ";
     for (int i=0;;i++) {
         if (date[i] == '\0')
             break;

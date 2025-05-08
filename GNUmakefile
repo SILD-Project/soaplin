@@ -39,6 +39,15 @@ ints: ovmf/ovmf-code-$(ARCH).fd $(IMAGE_NAME).iso
 		$(QEMUFLAGS)
 
 .PHONY: run-x86_64
+gdb-x86_64: ovmf/ovmf-code-$(ARCH).fd $(IMAGE_NAME).iso
+	qemu-system-$(ARCH) \
+		-M q35 \
+		-drive if=pflash,unit=0,format=raw,file=ovmf/ovmf-code-$(ARCH).fd,readonly=on \
+		-cdrom $(IMAGE_NAME).iso \
+		$(QEMUFLAGS) \
+		-S -s
+
+.PHONY: run-x86_64
 run-x86_64: ovmf/ovmf-code-$(ARCH).fd $(IMAGE_NAME).iso
 	qemu-system-$(ARCH) \
 		-M q35 \

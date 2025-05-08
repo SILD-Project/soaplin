@@ -33,7 +33,8 @@ int liballoc_free(void *ptr, size_t pages)
 }
 
 
-extern void *malloc(size_t s) { return PREFIX(malloc)(s); }
-extern void *realloc(void *v, size_t s) { return PREFIX(realloc)(v, s); }
-extern void *calloc(size_t s1, size_t s) { return PREFIX(calloc)(s1, s); }
-extern void free(void *v) { return PREFIX(free)(v); }
+
+ //void *malloc(size_t s) { return PREFIX(malloc)(s); }
+ //void *realloc(void *v, size_t s) { return PREFIX(realloc)(v, s); }
+ //void *calloc(size_t s1, size_t s) { return PREFIX(calloc)(s1, s); }
+ //void free(void *v) { return PREFIX(free)(v); }

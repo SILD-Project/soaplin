@@ -6,7 +6,7 @@
 #include <stdint.h>
 #include <sys/log.h>
 
-#define PREFIX(func) k##func
+#define PREFIX(func) func
 
 #ifdef _DEBUG
 void liballoc_dump();

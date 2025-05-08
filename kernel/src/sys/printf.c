@@ -1,6 +1,7 @@
 // Copyright (C) 2024 Sipaa Projects
 // This code is part of the Soaplin kernel and is licensed under the terms of
 // the MIT License.
+#include "sys/gfx/flanterm/flanterm.h"
 #include <rt.h>
 #include <stdarg.h>
 
@@ -15,6 +16,8 @@
 #define NANOPRINTF_IMPLEMENTATION
 #include <sys/printf.h>
 
+extern struct flanterm_context *ft_ctx;
+
 void printf(char *format, ...) {
     char buf[2048];
     va_list lst;
@@ -22,5 +25,7 @@ void printf(char *format, ...) {
     npf_vsnprintf(buf, 2048, format, lst);
     va_end(lst);
 
-    rt_print(buf);
+    //rt_print(buf);
+    int i = 0; for (i; buf[i] != 0; i++);;
+    flanterm_write(ft_ctx, buf, i);
 }
