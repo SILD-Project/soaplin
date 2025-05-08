@@ -1,3 +1,4 @@
+#include "exec/elf.h"
 #include "mm/pmm.h"
 #include "mm/vmm.h"
 #include "rt.h"
@@ -32,6 +33,12 @@ static volatile LIMINE_BASE_REVISION(3);
 __attribute__((used, section(".limine_requests")))
 static volatile struct limine_framebuffer_request framebuffer_request = {
     .id = LIMINE_FRAMEBUFFER_REQUEST,
+    .revision = 0
+};
+
+__attribute__((used, section(".limine_requests")))
+static volatile struct limine_module_request module_request = {
+    .id = LIMINE_MODULE_REQUEST,
     .revision = 0
 };
 
@@ -112,18 +119,23 @@ void kmain(void) {
     vmm_init();
 
     pit_init(1000);
-    //sched_init();
+    sched_init();
     //user_init();
 
-    uint8_t *mem = pmm_request_page();
-    mem[0] = 0xCD;
-    mem[1] = 0x80;
+    struct limine_file *f = module_request.response->modules[0];
+    log("kmain - %s\n", f->path);
+
+    elf_load((char*)f->address);
+
+    //uint8_t *mem = pmm_request_page();
+    //mem[0] = 0xCD;
+    //mem[1] = 0x80;
     //mem[2] = 0xF4;
 
     //mem[3] = 0xFE;
-    pagemap_t* pm = vmm_alloc_pm();
-    vmm_map(pm, 0x1000, (uint64_t)mem, VMM_PRESENT | VMM_USER);
-    sched_create("Init", 0x1000, pm, SCHED_USER_PROCESS);
+    //pagemap_t* pm = vmm_alloc_pm();
+    //vmm_map(pm, 0x1000, (uint64_t)mem, VMM_PRESENT | VMM_USER);
+    //sched_create("Init", 0x1000, pm, SCHED_USER_PROCESS);
 
 
     log("kernel - Soaplin initialized sucessfully.\n");

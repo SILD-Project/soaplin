@@ -90,6 +90,8 @@ sched_process *sched_create(char *name, uint64_t entry_point, pagemap_t* pm, uin
         log("sched - Standby mode has been"
         "disabled.\n");
     }
+    
+    log("sched - created process '%s' (pid: %d, rip: %p)\n", proc->name, proc->pid, proc->regs.rip);
     return proc;
 }
 
