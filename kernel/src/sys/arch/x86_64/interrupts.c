@@ -1,5 +1,6 @@
 //#include "mm/pmm.h"
 //#include "mm/vmm.h"
+#include "mm/pmm.h"
 #include "mm/vmm.h"
 #include "sched/sched.h"
 #include "sys/arch/x86_64/pic.h"
@@ -44,8 +45,9 @@ void exception_handler(registers_t *regs) {
         if(regs->int_no == 0xe) {
             uint64_t cr2;
             asm ("mov %%cr2, %0" : "=r"(cr2));
-            log("ints - PF: Faulting location: %p\n", cr2);
+            log("ints - PF: Faulting location: %p (%p)\n", cr2, virt_to_phys(vmm_current_pm, cr2));
             log("ints - PF: Faulting page flags: %p\n", vmm_get_flags(vmm_current_pm, cr2));
+            log("ints - PF: Faulting page map: %p\n", PHYSICAL(vmm_current_pm));
         }
 
         // dump_backtrace(regs);

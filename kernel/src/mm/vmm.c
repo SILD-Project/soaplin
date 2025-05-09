@@ -171,18 +171,19 @@ uint64_t vmm_get_flags(pagemap_t* pm, uint64_t vaddr) {
 
     return pml1[pml1_entry] & 0x7000000000000FFF;
 }
-  
+
 uint64_t virt_to_phys(pagemap_t *pagemap, uint64_t virt)
 {
-    uint64_t pml1_idx = (virt & (uint64_t)0x1ff << 12) >> 12;
-    uint64_t pml2_idx = (virt & (uint64_t)0x1ff << 21) >> 21;
-    uint64_t pml3_idx = (virt & (uint64_t)0x1ff << 30) >> 30;
-    uint64_t pml4_idx = (virt & (uint64_t)0x1ff << 39) >> 39;
+    uint64_t pml4_idx = (virt >> 39) & 0x1FF; 
+    uint64_t pml3_idx = (virt >> 30) & 0x1FF; 
+    uint64_t pml2_idx = (virt >> 21) & 0x1FF; 
+    uint64_t pml1_idx = (virt >> 12) & 0x1FF; 
 
     uint64_t *pml3 = __vmm_get_next_lvl(pagemap->toplevel, pml4_idx, 0);
     uint64_t *pml2 = __vmm_get_next_lvl(pml3, pml3_idx, 0);
     uint64_t *pml1 = __vmm_get_next_lvl(pml2, pml2_idx, 0);
-    uint64_t phys_addr = pml1[pml1_idx] & 0x000FFFFFFFFFF000;
+    
+    uint64_t phys_addr = pml1[pml1_idx] & 0x000FFFFFFFFFF000;  // Masque pour obtenir l'adresse physique (en retirant les bits de flags)
 
     return phys_addr;
 }

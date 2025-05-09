@@ -65,7 +65,7 @@ program_t *elf_load(char *data) {
         if (!(phdr[i].p_flags & PF_X))
             flags |= VMM_NX;
 
-        flags |= VMM_USER; // User mode access
+        flags |= VMM_USER;
 
         log("elf - loading ELF program header %u: vaddr 0x%llx - 0x%llx, offset 0x%llx, filesz 0x%llx, size 0x%llx, flags 0x%llx\n",
               i, vaddr_start, vaddr_end, offset, phdr[i].p_filesz, phdr[i].p_memsz, flags);
@@ -81,7 +81,9 @@ program_t *elf_load(char *data) {
                 return 0;
             }
 
+            log("elf - vmm_map(%p, %p, %p, %d)\n", pm, vaddr, phys, flags);
             vmm_map(pm, vaddr, phys, flags);
+            log("elf - memset(%p, 0, 0x1000)\n", HIGHER_HALF(phys));
             memset((void *)HIGHER_HALF(phys), 0, PMM_PAGE_SIZE);
 
             uint64_t file_page_offset = offset + (vaddr - vaddr_start);
@@ -109,6 +111,7 @@ program_t *elf_load(char *data) {
                 {
                     void *dest = (void *)(HIGHER_HALF(phys) + page_data_offset);
                     void *src = (uint8_t *)data + copy_offset;
+                    log("elf - memcpy(%p, %p, %d)\n", dest, src, copy_size);
                     memcpy(dest, src, copy_size);
 
                     //log("elf - copied 0x%llx bytes from ELF file offset 0x%llx to vaddr 0x%llx (phys 0x%llx)\n",
