@@ -1,5 +1,5 @@
-# SILD (SILD isn't a Linux distro)
-SILD is a Unix-like OS made with Limine.
+# Soaplin
+The Soaplin kernel is a new Unix-like operating system kernel.
 
 ## Features
 * x86_64 support (kinda)
