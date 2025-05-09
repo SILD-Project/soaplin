@@ -149,12 +149,11 @@ void vmm_load_pagemap(pagemap_t *pm) {
 }
 
 static uint64_t *__vmm_get_next_lvl(uint64_t *level, uint64_t entry, uint64_t flags) {
+    (void)flags;
     if (!(level[entry] & 1)){
         uint64_t *pml = HIGHER_HALF(pmm_request_page());
         memset(pml, 0, PMM_PAGE_SIZE);
-        level[entry] = ((uint64_t)PHYSICAL(pml) & 0x000FFFFFFFFFF000ULL) | flags;
-    } else {
-        level[entry] |= (flags & ~VMM_NX) & 0xFF;
+        level[entry] = ((uint64_t)PHYSICAL(pml) & 0x000FFFFFFFFFF000ULL) | 0b111;
     }
     return HIGHER_HALF(PTE_GET_ADDR(level[entry]));
 }

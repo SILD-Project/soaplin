@@ -2,10 +2,15 @@
 #include "sys/gfx/flanterm/flanterm.h"
 #include <stdarg.h>
 #include <sys/printf.h>
+#include <lib/spinlock.h>
 
 extern struct flanterm_context *ft_ctx;
 
+static spinlock_t log_lock = {0};
+
 void log(char *format, ...) {
+    //spinlock_acquire(&log_lock);
+
     // TODO: replace this call with a call to printf() when the RTC is implemented.
     char *date = "1970-01-01 00:00:00 | ";
     int i2 = 0; for (i2; date[i2] != 0; i2++);;
@@ -35,4 +40,6 @@ void log(char *format, ...) {
         
         outb(0xE9, buf[i]);
     }
+
+    //spinlock_release(&log_lock);
 }

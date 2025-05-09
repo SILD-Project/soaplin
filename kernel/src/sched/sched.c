@@ -122,6 +122,8 @@ void schedule(registers_t *regs)
         return;
     }
 
+    memcpy(&curr_proc->regs, regs, sizeof(registers_t));
+
     if (curr_proc->type == SCHED_DIED) {
         sched_process *prev_proc = proc_list;
         while (prev_proc->next != curr_proc) {
@@ -136,9 +138,9 @@ void schedule(registers_t *regs)
 
         // R.I.P. process
         pmm_free_page(curr_proc);
-    }
 
-    memcpy(&curr_proc->regs, regs, sizeof(registers_t));
+        return;
+    }
 
     curr_proc = curr_proc->next;
     if (curr_proc == NULL)

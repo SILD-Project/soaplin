@@ -139,6 +139,7 @@ void kmain(void) {
     log("kmain - %s\n", f->path);
 
     program_t *prog = elf_load((char*)f->address);
+
     sched_create("Init", prog->entry, prog->pm, SCHED_USER_PROCESS);
 
     log("kernel - Soaplin initialized sucessfully.\n");

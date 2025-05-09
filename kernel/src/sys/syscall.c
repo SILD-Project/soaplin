@@ -27,7 +27,7 @@ void syscall_handle(registers_t *regs) {
         return;
     }
 
-    regs->rax = syscall_table[regs->rax](regs->rsp, regs->rbp, regs->r12, regs->r13, regs->r14, regs->r15);
+    regs->rax = syscall_table[regs->rax](regs->rdi, regs->rsi, regs->rdx, regs->rcx, regs->r8, regs->r9);
     return;
 }
 
@@ -39,10 +39,14 @@ void syscall_register(int id, syscall handler) {
     }
 
     syscall_table[id] = handler;
-    log("syscall - System call %d has been set to %p", handler);
+    log("syscall - System call %d has been set to %p", id, handler);
 }
+
+extern void syscall_exit(int exit_code);
 
 void syscall_init() {
     for (int i = 0; i < 1024; i++)
         syscall_table[i] = (syscall)__syscall_undefined;
+
+    syscall_register(0, (syscall)syscall_exit);
 }

@@ -4,7 +4,11 @@ section .text
 
 _start:
     int 0x80
-    ; tell the kernel to exit the process.
-    mov rax, 10
     int 0x80
-    ret
+    int 0x80
+    int 0x80
+    int 0x80
+    int 0x80
+    int 0x80
+.hey:
+    jmp .hey
