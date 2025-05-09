@@ -150,5 +150,9 @@ void schedule(registers_t *regs)
     memcpy(regs, &curr_proc->regs, sizeof(registers_t));
 
     // Finally, load our pagemap
-    vmm_load_pagemap(curr_proc->pm);
+    //if (memcmp(curr_proc->name, "Init", 4)== 0) {
+        vmm_load_pagemap(curr_proc->pm);
+    //asm("cli");
+    //while (1)
+    //    asm("hlt");}
 }

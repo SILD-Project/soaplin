@@ -60,10 +60,10 @@ program_t *elf_load(char *data) {
         uint64_t offset = phdr[i].p_offset;
 
         uint64_t flags = VMM_PRESENT;
-        if (phdr[i].p_flags & PF_W)
+        //if (phdr[i].p_flags & PF_W)
             flags |= VMM_WRITABLE;
-        if (!(phdr[i].p_flags & PF_X))
-            flags |= VMM_NX;
+        //if (!(phdr[i].p_flags & PF_X))
+        //    flags |= VMM_NX;
 
         flags |= VMM_USER;
 
