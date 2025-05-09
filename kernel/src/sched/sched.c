@@ -11,6 +11,18 @@ sched_process *curr_proc;
 int current_pid = 0;
 int standby = 0;
 
+void map_range_to_pagemap(pagemap_t *dest_pagemap, pagemap_t *src_pagemap, uint64_t start, uint64_t size, uint64_t flags)
+{
+    for (uint64_t offset = 0; offset < size; offset += PMM_PAGE_SIZE)
+    {
+        uint64_t phys = virt_to_phys(src_pagemap, start + offset);
+        if (phys)
+        {
+            vmm_map(dest_pagemap, start + offset, phys, flags);
+        }
+    }
+}
+
 void sched_init() {
     // TODO: It may be good to implement heap memory to save space.
     
@@ -71,7 +83,7 @@ sched_process *sched_create(char *name, uint64_t entry_point, pagemap_t* pm, uin
         proc->regs.ss = 0x30;
     }
     else if (flags == SCHED_USER_PROCESS) {
-        proc->regs.cs = 0x43; // Run in kernel mode
+        proc->regs.cs = 0x43; // Run in user mode
         proc->regs.ss = 0x3B;
     }
     proc->regs.rflags = 0x202; // Enable interrupts
@@ -83,6 +95,8 @@ sched_process *sched_create(char *name, uint64_t entry_point, pagemap_t* pm, uin
 
     current_pid++;
 
+    map_range_to_pagemap(pm, vmm_kernel_pm, 0x1000, 0x10000, VMM_PRESENT | VMM_WRITABLE | VMM_USER);
+
     if (standby) {
         // Disable standby mode as there's actually something to
         // run, now.
@@ -90,7 +104,7 @@ sched_process *sched_create(char *name, uint64_t entry_point, pagemap_t* pm, uin
         log("sched - Standby mode has been"
         "disabled.\n");
     }
-    
+
     log("sched - created process '%s' (pid: %d, rip: %p)\n", proc->name, proc->pid, proc->regs.rip);
     return proc;
 }

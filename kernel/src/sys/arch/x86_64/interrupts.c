@@ -5,6 +5,7 @@
 #include "sys/arch/x86_64/pic.h"
 #include "sys/arch/x86_64/rtc.h"
 #include "sys/log.h"
+#include "sys/syscall.h"
 //#include "sys/sched.h"
 #include <stdint.h>
 #include <sys/arch/x86_64/idt.h>
@@ -71,10 +72,7 @@ void exception_handler(registers_t *regs) {
     }
     else if (regs->int_no == 0x80)
     {
-        log("syscall - Hello World! Current process: %s\n", curr_proc->name);
-        if (curr_proc->flags == SCHED_USER_PROCESS)
-            log("syscall - Btw we made it to userspace, baby!\n", curr_proc->name);
-    
+        syscall_handle(regs);
     }
     //logln(info, "arch/ints", "Received interrupt %d\n", regs->int_no);
     pic_ack(regs->int_no - 32);

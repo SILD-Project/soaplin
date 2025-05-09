@@ -1,4 +1,5 @@
 #include "exec/elf.h"
+#include "exec/exec.h"
 #include "mm/pmm.h"
 #include "mm/vma.h"
 #include "mm/vmm.h"
@@ -6,6 +7,7 @@
 #include "sched/sched.h"
 #include "sys/arch/x86_64/pit.h"
 #include "sys/arch/x86_64/sse.h"
+#include "sys/syscall.h"
 #include <sys/log.h>
 #include <stdint.h>
 #include <stddef.h>
@@ -116,7 +118,6 @@ void kmain(void) {
     gdt_init(&kstack[8192]);
     idt_init();
     fpu_activate();
-
     sse_init();
 
     pmm_init();
@@ -129,11 +130,7 @@ void kmain(void) {
             asm("hlt");
     }
 
-    char *a = malloc(1);
-    *a = 32;
-    log("Allocated 1 byte at 0x%.16llx\n", (uint64_t)a);
-    free(a);
-
+    syscall_init();
     pit_init(1000);
     sched_init();
     //user_init();
@@ -141,7 +138,8 @@ void kmain(void) {
     struct limine_file *f = module_request.response->modules[0];
     log("kmain - %s\n", f->path);
 
-    elf_load((char*)f->address);
+    program_t *prog = elf_load((char*)f->address);
+    sched_create("Init", prog->entry, prog->pm, SCHED_USER_PROCESS);
 
     log("kernel - Soaplin initialized sucessfully.\n");
     while (1)

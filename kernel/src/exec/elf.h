@@ -1,5 +1,6 @@
 #pragma once
 
+#include "exec/exec.h"
 #include <stdint.h>
 
 // ELF magic.
@@ -115,4 +116,10 @@ typedef struct {
     uint64_t   p_align;
 } Elf64_Phdr;
 
-void elf_load(char *data);
+typedef struct {
+    program_t program;
+
+    Elf64_Ehdr *ehdr;
+} elf_program_t;
+
+program_t *elf_load(char *data);

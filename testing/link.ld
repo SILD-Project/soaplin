@@ -1,20 +1,23 @@
+OUTPUT_FORMAT("elf64-x86-64")
+ENTRY(_start)
+
 SECTIONS {
-  . = 0x1000;
+    . = 0x100000;
 
-  .text : {
-    *(.text*)
-  }
+    .text : {
+        *(.text)
+    } 
+    
+    .rodata : {
+        *(.rodata)
+    }
 
-  .rodata : {
-    *(.rodata*)
-  }
+    .data : {
+        *(.data)
+    }
 
-  .data : {
-    *(.data*)
-  }
-
-  .bss : {
-    *(.bss*)
-    *(COMMON)
-  }
+    .bss : {
+        *(COMMON)
+        *(.bss)
+    }
 }
