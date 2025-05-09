@@ -157,7 +157,7 @@ static uint64_t *__vmm_get_next_lvl(uint64_t *level, uint64_t entry,
     level[entry] = (uint64_t)PHYSICAL(pml);
     
   }
-  level[entry] |= (flags & 0xFFF); // N'ajoute que les flags pertinents
+  level[entry] |= (flags & 0xFFF); 
   return HIGHER_HALF(PTE_GET_ADDR(level[entry]));
 }
 
@@ -204,6 +204,7 @@ void vmm_map(pagemap_t *pm, uint64_t vaddr, uint64_t paddr, uint64_t flags) {
 
   pml1[pml1_entry] = paddr | flags;
 }
+
 void vmm_unmap(pagemap_t *pm, uint64_t vaddr) {
   uint64_t pml1_entry = (vaddr >> 12) & 0x1ff;
   uint64_t pml2_entry = (vaddr >> 21) & 0x1ff;

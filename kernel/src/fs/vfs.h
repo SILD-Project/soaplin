@@ -25,3 +25,4 @@ typedef struct __vfs_mount {
     struct vfs_node *mounted_root;      // The root node of the mounted filesystem
     struct vfs_mount *next;             // Pointer to next mount point
 } vfs_mount;
+

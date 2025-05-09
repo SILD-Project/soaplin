@@ -39,7 +39,7 @@ void syscall_register(int id, syscall handler) {
     }
 
     syscall_table[id] = handler;
-    log("syscall - System call %d has been set to %p", id, handler);
+    log("syscall - System call %d has been set to %p\n", id, handler);
 }
 
 extern void syscall_exit(int exit_code);
