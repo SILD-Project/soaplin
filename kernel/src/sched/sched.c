@@ -153,6 +153,8 @@ void schedule(registers_t *regs) {
   if (curr_proc == NULL)
     curr_proc = proc_list;
 
+  log("sched - I choosed process %d\n", curr_proc->pid);
+
   // log("sched - I choosed process %d\n", curr_proc->pid);
   memcpy(regs, &curr_proc->regs, sizeof(registers_t));
 

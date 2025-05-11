@@ -31,7 +31,8 @@ run-hdd: run-hdd-$(ARCH)
 
 .PHONY: ints
 ints: ovmf/ovmf-code-$(ARCH).fd $(IMAGE_NAME).iso
-	qemu-system-$(ARCH) \
+	@echo "  Starting QEMU with $(IMAGE_NAME).iso"
+	@qemu-system-$(ARCH) \
 		-M q35 \
 		-drive if=pflash,unit=0,format=raw,file=ovmf/ovmf-code-$(ARCH).fd,readonly=on \
 		-cdrom $(IMAGE_NAME).iso \
@@ -40,7 +41,8 @@ ints: ovmf/ovmf-code-$(ARCH).fd $(IMAGE_NAME).iso
 
 .PHONY: run-x86_64
 gdb-x86_64: ovmf/ovmf-code-$(ARCH).fd $(IMAGE_NAME).iso
-	qemu-system-$(ARCH) \
+	@echo "  Starting QEMU with $(IMAGE_NAME).iso"
+	@qemu-system-$(ARCH) \
 		-M q35 \
 		-drive if=pflash,unit=0,format=raw,file=ovmf/ovmf-code-$(ARCH).fd,readonly=on \
 		-cdrom $(IMAGE_NAME).iso \
@@ -49,7 +51,8 @@ gdb-x86_64: ovmf/ovmf-code-$(ARCH).fd $(IMAGE_NAME).iso
 
 .PHONY: run-x86_64
 run-x86_64: ovmf/ovmf-code-$(ARCH).fd $(IMAGE_NAME).iso
-	qemu-system-$(ARCH) \
+	@echo "  Starting QEMU with $(IMAGE_NAME).iso"
+	@qemu-system-$(ARCH) \
 		-M q35 \
 		-drive if=pflash,unit=0,format=raw,file=ovmf/ovmf-code-$(ARCH).fd,readonly=on \
 		-cdrom $(IMAGE_NAME).iso \
@@ -57,7 +60,8 @@ run-x86_64: ovmf/ovmf-code-$(ARCH).fd $(IMAGE_NAME).iso
 
 .PHONY: run-hdd-x86_64
 run-hdd-x86_64: ovmf/ovmf-code-$(ARCH).fd $(IMAGE_NAME).hdd
-	qemu-system-$(ARCH) \
+	@echo "  Starting QEMU with $(IMAGE_NAME).hdd"
+	@qemu-system-$(ARCH) \
 		-M q35 \
 		-drive if=pflash,unit=0,format=raw,file=ovmf/ovmf-code-$(ARCH).fd,readonly=on \
 		-hda $(IMAGE_NAME).hdd \
@@ -65,7 +69,8 @@ run-hdd-x86_64: ovmf/ovmf-code-$(ARCH).fd $(IMAGE_NAME).hdd
 
 .PHONY: run-aarch64
 run-aarch64: ovmf/ovmf-code-$(ARCH).fd $(IMAGE_NAME).iso
-	qemu-system-$(ARCH) \
+	@echo "  Starting QEMU with $(IMAGE_NAME).iso"
+	@qemu-system-$(ARCH) \
 		-M virt \
 		-cpu cortex-a72 \
 		-device ramfb \
@@ -78,7 +83,8 @@ run-aarch64: ovmf/ovmf-code-$(ARCH).fd $(IMAGE_NAME).iso
 
 .PHONY: run-hdd-aarch64
 run-hdd-aarch64: ovmf/ovmf-code-$(ARCH).fd $(IMAGE_NAME).hdd
-	qemu-system-$(ARCH) \
+	@echo "  Starting QEMU with $(IMAGE_NAME).hdd"
+	@qemu-system-$(ARCH) \
 		-M virt \
 		-cpu cortex-a72 \
 		-device ramfb \
@@ -91,7 +97,8 @@ run-hdd-aarch64: ovmf/ovmf-code-$(ARCH).fd $(IMAGE_NAME).hdd
 
 .PHONY: run-riscv64
 run-riscv64: ovmf/ovmf-code-$(ARCH).fd $(IMAGE_NAME).iso
-	qemu-system-$(ARCH) \
+	@echo "  Starting QEMU with $(IMAGE_NAME).iso"
+	@qemu-system-$(ARCH) \
 		-M virt \
 		-cpu rv64 \
 		-device ramfb \
@@ -104,7 +111,8 @@ run-riscv64: ovmf/ovmf-code-$(ARCH).fd $(IMAGE_NAME).iso
 
 .PHONY: run-hdd-riscv64
 run-hdd-riscv64: ovmf/ovmf-code-$(ARCH).fd $(IMAGE_NAME).hdd
-	qemu-system-$(ARCH) \
+	@echo "  Starting QEMU with $(IMAGE_NAME).hdd"
+	@qemu-system-$(ARCH) \
 		-M virt \
 		-cpu rv64 \
 		-device ramfb \
@@ -117,7 +125,8 @@ run-hdd-riscv64: ovmf/ovmf-code-$(ARCH).fd $(IMAGE_NAME).hdd
 
 .PHONY: run-loongarch64
 run-loongarch64: ovmf/ovmf-code-$(ARCH).fd $(IMAGE_NAME).iso
-	qemu-system-$(ARCH) \
+	@echo "  Starting QEMU with $(IMAGE_NAME).iso"
+	@qemu-system-$(ARCH) \
 		-M virt \
 		-cpu la464 \
 		-device ramfb \
@@ -130,7 +139,8 @@ run-loongarch64: ovmf/ovmf-code-$(ARCH).fd $(IMAGE_NAME).iso
 
 .PHONY: run-hdd-loongarch64
 run-hdd-loongarch64: ovmf/ovmf-code-$(ARCH).fd $(IMAGE_NAME).hdd
-	qemu-system-$(ARCH) \
+	@echo "  Starting QEMU with $(IMAGE_NAME).hdd"
+	@qemu-system-$(ARCH) \
 		-M virt \
 		-cpu la464 \
 		-device ramfb \
@@ -144,7 +154,8 @@ run-hdd-loongarch64: ovmf/ovmf-code-$(ARCH).fd $(IMAGE_NAME).hdd
 
 .PHONY: run-bios
 run-bios: $(IMAGE_NAME).iso
-	qemu-system-$(ARCH) \
+	@echo "  Starting QEMU with $(IMAGE_NAME).iso"
+	@qemu-system-$(ARCH) \
 		-M q35 \
 		-cdrom $(IMAGE_NAME).iso \
 		-boot d \
@@ -152,122 +163,132 @@ run-bios: $(IMAGE_NAME).iso
 
 .PHONY: run-hdd-bios
 run-hdd-bios: $(IMAGE_NAME).hdd
-	qemu-system-$(ARCH) \
+	@echo "  Starting QEMU with $(IMAGE_NAME).hdd"
+	@qemu-system-$(ARCH) \
 		-M q35 \
 		-hda $(IMAGE_NAME).hdd \
 		$(QEMUFLAGS)
 
 ovmf/ovmf-code-$(ARCH).fd:
-	mkdir -p ovmf
-	curl -Lo $@ https://github.com/osdev0/edk2-ovmf-nightly/releases/latest/download/ovmf-code-$(ARCH).fd
-	case "$(ARCH)" in \
+	@mkdir -p ovmf
+	@curl -Lo $@ https://github.com/osdev0/edk2-ovmf-nightly/releases/latest/download/ovmf-code-$(ARCH).fd
+	@case "$(ARCH)" in \
 		aarch64) dd if=/dev/zero of=$@ bs=1 count=0 seek=67108864 2>/dev/null;; \
 		riscv64) dd if=/dev/zero of=$@ bs=1 count=0 seek=33554432 2>/dev/null;; \
-	esac
+	@esac
 
 limine/limine:
-	rm -rf limine
-	git clone https://github.com/limine-bootloader/limine.git --branch=v9.x-binary --depth=1
-	$(MAKE) -C limine \
+	@rm -rf limine
+	@git clone https://github.com/limine-bootloader/limine.git --branch=v9.x-binary --depth=1
+	@$(MAKE) -C limine \
 		CC="$(HOST_CC)" \
 		CFLAGS="$(HOST_CFLAGS)" \
 		CPPFLAGS="$(HOST_CPPFLAGS)" \
 		LDFLAGS="$(HOST_LDFLAGS)" \
 		LIBS="$(HOST_LIBS)"
+	@echo "  Limine installer has been built"
 
 kernel-deps:
-	./kernel/get-deps
-	touch kernel-deps
+	@./kernel/get-deps
+	@touch kernel-deps
+	@echo "  Kernel dependencies have been downloaded"
 
 .PHONY: kernel
 kernel: kernel-deps
 	$(MAKE) -C kernel
 
 $(IMAGE_NAME).iso: limine/limine kernel
-	rm -rf iso_root
-	mkdir -p iso_root/boot
-	cp -v kernel/bin-$(ARCH)/soaplin iso_root/boot/
-	mkdir -p iso_root/boot/limine
-	cp -v limine.conf iso_root/boot/limine/
-	mkdir -p iso_root/EFI/BOOT
+	@rm -rf iso_root
+	@mkdir -p iso_root/boot
+	@cp -v kernel/bin-$(ARCH)/soaplin iso_root/boot/
+	@mkdir -p iso_root/boot/limine
+	@cp -v limine.conf iso_root/boot/limine/
+	@mkdir -p iso_root/EFI/BOOT
 ifeq ($(ARCH),x86_64)
-	cp -v testing/sk-hello.elf iso_root/
-	cp -v limine/limine-bios.sys limine/limine-bios-cd.bin limine/limine-uefi-cd.bin iso_root/boot/limine/
-	cp -v limine/BOOTX64.EFI iso_root/EFI/BOOT/
-	cp -v limine/BOOTIA32.EFI iso_root/EFI/BOOT/
-	xorriso -as mkisofs -R -r -J -b boot/limine/limine-bios-cd.bin \
+	@cp -v testing/sk-hello.elf iso_root/
+	@cp -v limine/limine-bios.sys limine/limine-bios-cd.bin limine/limine-uefi-cd.bin iso_root/boot/limine/
+	@cp -v limine/BOOTX64.EFI iso_root/EFI/BOOT/
+	@cp -v limine/BOOTIA32.EFI iso_root/EFI/BOOT/
+	@xorriso -as mkisofs -R -r -J -b boot/limine/limine-bios-cd.bin \
 		-no-emul-boot -boot-load-size 4 -boot-info-table -hfsplus \
 		-apm-block-size 2048 --efi-boot boot/limine/limine-uefi-cd.bin \
 		-efi-boot-part --efi-boot-image --protective-msdos-label \
 		iso_root -o $(IMAGE_NAME).iso
-	./limine/limine bios-install $(IMAGE_NAME).iso
+	@./limine/limine bios-install $(IMAGE_NAME).iso
 endif
 ifeq ($(ARCH),aarch64)
-	cp -v limine/limine-uefi-cd.bin iso_root/boot/limine/
-	cp -v limine/BOOTAA64.EFI iso_root/EFI/BOOT/
-	xorriso -as mkisofs -R -r -J \
+	@cp -v limine/limine-uefi-cd.bin iso_root/boot/limine/
+	@cp -v limine/BOOTAA64.EFI iso_root/EFI/BOOT/
+	@xorriso -as mkisofs -R -r -J \
 		-hfsplus -apm-block-size 2048 \
 		--efi-boot boot/limine/limine-uefi-cd.bin \
 		-efi-boot-part --efi-boot-image --protective-msdos-label \
 		iso_root -o $(IMAGE_NAME).iso
 endif
 ifeq ($(ARCH),riscv64)
-	cp -v limine/limine-uefi-cd.bin iso_root/boot/limine/
-	cp -v limine/BOOTRISCV64.EFI iso_root/EFI/BOOT/
-	xorriso -as mkisofs -R -r -J \
+	@cp -v limine/limine-uefi-cd.bin iso_root/boot/limine/
+	@cp -v limine/BOOTRISCV64.EFI iso_root/EFI/BOOT/
+	@xorriso -as mkisofs -R -r -J \
 		-hfsplus -apm-block-size 2048 \
 		--efi-boot boot/limine/limine-uefi-cd.bin \
 		-efi-boot-part --efi-boot-image --protective-msdos-label \
 		iso_root -o $(IMAGE_NAME).iso
 endif
 ifeq ($(ARCH),loongarch64)
-	cp -v limine/limine-uefi-cd.bin iso_root/boot/limine/
-	cp -v limine/BOOTLOONGARCH64.EFI iso_root/EFI/BOOT/
-	xorriso -as mkisofs -R -r -J \
+	@cp -v limine/limine-uefi-cd.bin iso_root/boot/limine/
+	@cp -v limine/BOOTLOONGARCH64.EFI iso_root/EFI/BOOT/
+	@xorriso -as mkisofs -R -r -J \
 		-hfsplus -apm-block-size 2048 \
 		--efi-boot boot/limine/limine-uefi-cd.bin \
 		-efi-boot-part --efi-boot-image --protective-msdos-label \
 		iso_root -o $(IMAGE_NAME).iso
 endif
-	rm -rf iso_root
+	@rm -rf iso_root
+	@echo "  The final ISO image has been created: $(IMAGE_NAME).iso"
 
 $(IMAGE_NAME).hdd: limine/limine kernel
-	rm -f $(IMAGE_NAME).hdd
-	dd if=/dev/zero bs=1M count=0 seek=64 of=$(IMAGE_NAME).hdd
-	PATH=$$PATH:/usr/sbin:/sbin sgdisk $(IMAGE_NAME).hdd -n 1:2048 -t 1:ef00
+	@rm -f $(IMAGE_NAME).hdd
+	@dd if=/dev/zero bs=1M count=0 seek=64 of=$(IMAGE_NAME).hdd
+	@echo "  Creating $(IMAGE_NAME).hdd"
+	@PATH=$$PATH:/usr/sbin:/sbin sgdisk $(IMAGE_NAME).hdd -n 1:2048 -t 1:ef00
+	@echo "  Creating partition table"
 ifeq ($(ARCH),x86_64)
-	./limine/limine bios-install $(IMAGE_NAME).hdd
+	@./limine/limine bios-install $(IMAGE_NAME).hdd
 endif
-	mformat -i $(IMAGE_NAME).hdd@@1M
-	mmd -i $(IMAGE_NAME).hdd@@1M ::/EFI ::/EFI/BOOT ::/boot ::/boot/limine
-	mcopy -i $(IMAGE_NAME).hdd@@1M kernel/bin-$(ARCH)/kernel ::/boot
-	mcopy -i $(IMAGE_NAME).hdd@@1M limine.conf ::/boot/limine
+	@mformat -i $(IMAGE_NAME).hdd@@1M
+	@mmd -i $(IMAGE_NAME).hdd@@1M ::/EFI ::/EFI/BOOT ::/boot ::/boot/limine
+	@mcopy -i $(IMAGE_NAME).hdd@@1M kernel/bin-$(ARCH)/kernel ::/boot
+	@mcopy -i $(IMAGE_NAME).hdd@@1M limine.conf ::/boot/limine
 ifeq ($(ARCH),x86_64)
-	mcopy -i $(IMAGE_NAME).hdd@@1M limine/limine-bios.sys ::/boot/limine
-	mcopy -i $(IMAGE_NAME).hdd@@1M limine/BOOTX64.EFI ::/EFI/BOOT
-	mcopy -i $(IMAGE_NAME).hdd@@1M limine/BOOTIA32.EFI ::/EFI/BOOT
+	@mcopy -i $(IMAGE_NAME).hdd@@1M limine/limine-bios.sys ::/boot/limine
+	@mcopy -i $(IMAGE_NAME).hdd@@1M limine/BOOTX64.EFI ::/EFI/BOOT
+	@mcopy -i $(IMAGE_NAME).hdd@@1M limine/BOOTIA32.EFI ::/EFI/BOOT
 endif
 ifeq ($(ARCH),aarch64)
-	mcopy -i $(IMAGE_NAME).hdd@@1M limine/BOOTAA64.EFI ::/EFI/BOOT
+	@mcopy -i $(IMAGE_NAME).hdd@@1M limine/BOOTAA64.EFI ::/EFI/BOOT
 endif
 ifeq ($(ARCH),riscv64)
-	mcopy -i $(IMAGE_NAME).hdd@@1M limine/BOOTRISCV64.EFI ::/EFI/BOOT
+	@mcopy -i $(IMAGE_NAME).hdd@@1M limine/BOOTRISCV64.EFI ::/EFI/BOOT
 endif
 ifeq ($(ARCH),loongarch64)
-	mcopy -i $(IMAGE_NAME).hdd@@1M limine/BOOTLOONGARCH64.EFI ::/EFI/BOOT
+	@mcopy -i $(IMAGE_NAME).hdd@@1M limine/BOOTLOONGARCH64.EFI ::/EFI/BOOT
 endif
+	@echo "  Installed Limine bootloader"
 
 .PHONY: clean
 clean:
-	$(MAKE) -C kernel clean
-	rm -rf iso_root $(IMAGE_NAME).iso $(IMAGE_NAME).hdd
+	@$(MAKE) -C kernel clean
+	@rm -rf iso_root $(IMAGE_NAME).iso $(IMAGE_NAME).hdd
+	@echo "  The output files have been removed."
 
 .PHONY: distclean
 distclean:
-	$(MAKE) -C kernel distclean
-	rm -rf iso_root *.iso *.hdd kernel-deps limine ovmf
+	@$(MAKE) -C kernel distclean
+	@rm -rf iso_root *.iso *.hdd kernel-deps limine ovmf
+	@echo "  The output & downloaded files have been removed."
 
 # Make some function to run clang-format all over the kernel
 .PHONY: format
 format:
-	clang-format -i -style=file $(shell find kernel/src -name '*.c' -or -name '*.h')
+	@clang-format -i -style=file $(shell find kernel/src -name '*.c' -or -name '*.h')
+	@echo "  Kernel source code formatted"

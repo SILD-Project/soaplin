@@ -226,12 +226,12 @@ void vmm_map_user(pagemap_t *pm, uint64_t vaddr, uint64_t paddr,
   uint64_t pml2_entry = (vaddr >> 21) & 0x1ff;
   uint64_t pml1_entry = (vaddr >> 12) & 0x1ff;
 
-  uint64_t *pml3 =
-      __vmm_get_next_lvl(pm->toplevel, pml4_entry, flags,
+
+  uint64_t *pml3 = __vmm_get_next_lvl(pm->toplevel, pml4_entry, flags | VMM_WRITABLE,
                          true); // PML3 / Page Directory Pointer Entry
-  uint64_t *pml2 = __vmm_get_next_lvl(pml3, pml3_entry, flags,
+  uint64_t *pml2 = __vmm_get_next_lvl(pml3, pml3_entry, flags | VMM_WRITABLE,
                                       true); // PML2 / Page Directory Entry
-  uint64_t *pml1 = __vmm_get_next_lvl(pml2, pml2_entry, flags,
+  uint64_t *pml1 = __vmm_get_next_lvl(pml2, pml2_entry, flags | VMM_WRITABLE,
                                       true); // PML1 / Page Table Entry
 
   pml1[pml1_entry] = paddr | flags;

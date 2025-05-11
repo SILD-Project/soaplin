@@ -167,54 +167,60 @@ all: bin-$(ARCH)/$(OUTPUT)
 
 # Link rules for building the C compiler runtime.
 cc-runtime-$(ARCH)/cc-runtime.a: GNUmakefile cc-runtime/*
-	rm -rf cc-runtime-$(ARCH)
-	cp -r cc-runtime cc-runtime-$(ARCH)
-	$(MAKE) -C cc-runtime-$(ARCH) -f cc-runtime.mk \
+	@rm -rf cc-runtime-$(ARCH)
+	@cp -r cc-runtime cc-runtime-$(ARCH)
+	@$(MAKE) -C cc-runtime-$(ARCH) -f cc-runtime.mk \
 		CC="$(CC)" \
 		AR="$(AR)" \
 		CFLAGS="$(CFLAGS)" \
 		CPPFLAGS='-isystem ../freestnd-c-hdrs -DCC_RUNTIME_NO_FLOAT'
+	@echo "  C runtime built"
 
 # Link rules for the final executable.
 bin-$(ARCH)/$(OUTPUT): GNUmakefile linker-$(ARCH).ld $(OBJ) cc-runtime-$(ARCH)/cc-runtime.a
-	mkdir -p "$$(dirname $@)"
-	$(CC) $(CFLAGS) $(LDFLAGS) $(OBJ) cc-runtime-$(ARCH)/cc-runtime.a -o $@
+	@mkdir -p "$$(dirname $@)"
+	@echo "  LD  $@"
+	@$(CC) $(CFLAGS) $(LDFLAGS) $(OBJ) cc-runtime-$(ARCH)/cc-runtime.a -o $@
 
 # Compilation rules for *.c files.
 obj-$(ARCH)/%.c.o: src/%.c GNUmakefile
-	mkdir -p "$$(dirname $@)"
-	$(CC) $(CFLAGS) $(CPPFLAGS) -c $< -o $@
+	@mkdir -p "$$(dirname $@)"
+	@echo "  CC  $@"
+	@$(CC) $(CFLAGS) $(CPPFLAGS) -c $< -o $@
 
 # Compilation rules for *.S files.
 obj-$(ARCH)/%.S.o: src/%.S GNUmakefile
-	mkdir -p "$$(dirname $@)"
-	$(CC) $(CFLAGS) $(CPPFLAGS) -c $< -o $@
+	@mkdir -p "$$(dirname $@)"
+	@echo "  AS  $@"
+	@$(CC) $(CFLAGS) $(CPPFLAGS) -c $< -o $@
 
 ifeq ($(ARCH),x86_64)
 # Compilation rules for *.asm (nasm) files.
 obj-$(ARCH)/%.asm.o: src/%.asm GNUmakefile
-	mkdir -p "$$(dirname $@)"
-	nasm $(NASMFLAGS) $< -o $@
+	@mkdir -p "$$(dirname $@)"
+	@echo "  NASM $@"
+	@nasm $(NASMFLAGS) $< -o $@
 endif
 
 # Remove object files and the final executable.
 .PHONY: clean
 clean:
-	rm -rf bin-$(ARCH) obj-$(ARCH) cc-runtime-$(ARCH)
-
+	@rm -rf bin-$(ARCH) obj-$(ARCH) cc-runtime-$(ARCH)
+	@echo "  The kernel output files have been removed."
 # Remove everything built and generated including downloaded dependencies.
 .PHONY: distclean
 distclean:
-	rm -rf bin-* obj-* freestnd-c-hdrs cc-runtime* src/limine.h
+	@rm -rf bin-* obj-* freestnd-c-hdrs cc-runtime* src/limine.h
+	@echo "  The kernel output & downloaded files have been removed."
 
 # Install the final built executable to its final on-root location.
 .PHONY: install
 install: all
-	install -d "$(DESTDIR)$(PREFIX)/share/$(OUTPUT)"
-	install -m 644 bin-$(ARCH)/$(OUTPUT) "$(DESTDIR)$(PREFIX)/share/$(OUTPUT)/$(OUTPUT)-$(ARCH)"
+	@install -d "$(DESTDIR)$(PREFIX)/share/$(OUTPUT)"
+	@install -m 644 bin-$(ARCH)/$(OUTPUT) "$(DESTDIR)$(PREFIX)/share/$(OUTPUT)/$(OUTPUT)-$(ARCH)"
 
 # Try to undo whatever the "install" target did.
 .PHONY: uninstall
 uninstall:
-	rm -f "$(DESTDIR)$(PREFIX)/share/$(OUTPUT)/$(OUTPUT)-$(ARCH)"
-	-rmdir "$(DESTDIR)$(PREFIX)/share/$(OUTPUT)"
+	@rm -f "$(DESTDIR)$(PREFIX)/share/$(OUTPUT)/$(OUTPUT)-$(ARCH)"
+	@-rmdir "$(DESTDIR)$(PREFIX)/share/$(OUTPUT)"
