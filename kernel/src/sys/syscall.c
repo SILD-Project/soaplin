@@ -18,7 +18,7 @@ void syscall_handle(registers_t *regs) {
     return;
   }
 
-  if (curr_proc == NULL || curr_proc->regs.cs != 0x43) {
+  if (curr_proc == NULL || curr_proc->regs.cs != 0x3B) {
     log("syscall - syscall_handle was called by the kernel. is this wanted?\n");
     return;
   }

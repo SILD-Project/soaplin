@@ -34,6 +34,8 @@ void sched_init() {
   memcpy(proc_list->name, "System\0", 7);
   proc_list->pid = -1;
   proc_list->type = SCHED_EMPTY;
+  proc_list->flags = SCHED_KERNEL_PROCESS;
+  proc_list->pm = vmm_kernel_pm;
 
   curr_proc = proc_list;
 
@@ -71,13 +73,13 @@ sched_process *sched_create(char *name, uint64_t entry_point, pagemap_t *pm,
   if (flags == SCHED_KERNEL_PROCESS) {
     proc->stack_base = stack_phys;
     proc->stack_base_physical = stack_phys;
-    proc->stack_end = proc_list->stack_base + PMM_PAGE_SIZE;
+    proc->stack_end = proc->stack_base + PMM_PAGE_SIZE;
   } else if (flags == SCHED_USER_PROCESS) {
     vmm_map_user(proc->pm, (uint64_t)stack_virt, (uint64_t)stack_phys,
                  VMM_PRESENT | VMM_WRITABLE | VMM_USER);
     proc->stack_base = stack_virt;
     proc->stack_base_physical = stack_phys;
-    proc->stack_end = proc_list->stack_base + PMM_PAGE_SIZE;
+    proc->stack_end = proc->stack_base + PMM_PAGE_SIZE;
   }
   proc->regs.rip = (uint64_t)entry_point;
 
@@ -85,8 +87,8 @@ sched_process *sched_create(char *name, uint64_t entry_point, pagemap_t *pm,
     proc->regs.cs = 0x28; // Run in kernel mode
     proc->regs.ss = 0x30;
   } else if (flags == SCHED_USER_PROCESS) {
-    proc->regs.cs = 0x43; // Run in user mode
-    proc->regs.ss = 0x3B;
+    proc->regs.cs = 0x38 | 3; // Run in user mode
+    proc->regs.ss = 0x40 | 3;
   }
   proc->regs.rflags = 0x202; // Enable interrupts
   proc->regs.rsp = (uint64_t)proc->stack_end;
@@ -153,9 +155,9 @@ void schedule(registers_t *regs) {
   if (curr_proc == NULL)
     curr_proc = proc_list;
 
-  log("sched - I choosed process %d\n", curr_proc->pid);
+  //log("sched - I choosed process %d\n", curr_proc->pid);
 
-  // log("sched - I choosed process %d\n", curr_proc->pid);
+  //log("sched - I choosed process %d (pm: %s, rip: %p)\n", curr_proc->pid, curr_proc->pm == vmm_kernel_pm ? "kernel" : "user", curr_proc->regs.rip);
   memcpy(regs, &curr_proc->regs, sizeof(registers_t));
 
   // Finally, load our pagemap

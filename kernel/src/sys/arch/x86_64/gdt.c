@@ -16,8 +16,8 @@ gdt_table def_table = {{
                            0x00af9b000000ffff, // 0x28 64 bit code cs
                            0x00af93000000ffff, // 0x30 64 bit data ss
 
-                           0x00aff3000000ffff, // 0x38 data ss
-                           0x00affb000000ffff, // 0x40 user mode code cs
+                           0x00affb000000ffff, // 0x38 user mode code cs
+                           0x00aff3000000ffff, // 0x40 user mode data ss
                        },
                        {}};
 
@@ -26,7 +26,9 @@ tssr tss_list[256]; // One tssr per CPU
 void gdt_init(char *kstack) {
 
   // TODO: adapt for multiprocessor kernel
+  memset(&tss_list[0], 0, sizeof(tssr));
   tss_list[0].rsp[0] = (uint64_t)kstack;
+  tss_list[0].iopb = sizeof(tssr);
   uintptr_t tss = (uintptr_t)&tss_list[0];
 
   def_table.tss_entry.length = sizeof(tss_entry);
