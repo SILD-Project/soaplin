@@ -2,6 +2,7 @@
 // This code is part of the Soaplin kernel and is licensed under the terms of
 // the MIT License.
 #include "sys/gfx/flanterm/flanterm.h"
+#include <lib/string.h>
 #include <stdarg.h>
 
 #define NANOPRINTF_USE_FIELD_WIDTH_FORMAT_SPECIFIERS 1
@@ -25,11 +26,6 @@ void printf(char *format, ...) {
   va_end(lst);
 
   // rt_print(buf);
-  int i = 0;
-  for (i; buf[i] != 0; i++)
-    ;
-  ;
-
   if (ft_ctx)
-    flanterm_write(ft_ctx, buf, i);
+    flanterm_write(ft_ctx, buf, strlen(buf));
 }

@@ -4,6 +4,7 @@
 #include "mm/vmm.h"
 #include "sys/arch/x86_64/idt.h"
 #include "sys/log.h"
+#include <lib/string.h>
 #include <stddef.h>
 
 sched_process *proc_list;
@@ -47,16 +48,11 @@ void sched_init() {
 
 sched_process *sched_create(char *name, uint64_t entry_point, pagemap_t *pm,
                             uint32_t flags) {
-  // TODO: implement a separate strlen function
-  // as there's like 4 strlen impls in the kernel.
-  int i = 0;
-  while (name[i] != 0)
-    i++;
 
   sched_process *proc = pmm_request_page();
   memset(proc, 0, sizeof(sched_process));
 
-  memcpy(proc->name, name, i);
+  memcpy(proc->name, name, strlen(name) > 128 ? 128 : strlen(name));
   proc->pid = current_pid;
   proc->type = SCHED_RUNNING;
   proc->flags = flags;
@@ -141,7 +137,6 @@ void schedule(registers_t *regs) {
 
     prev_proc->next = curr_proc->next;
 
-    // Now, it is safe to free the process's memory.
     vmm_release_pm(curr_proc->pm);
     pmm_free_page(curr_proc->stack_base_physical);
 
@@ -155,15 +150,7 @@ void schedule(registers_t *regs) {
   if (curr_proc == NULL)
     curr_proc = proc_list;
 
-  //log("sched - I choosed process %d\n", curr_proc->pid);
-
-  //log("sched - I choosed process %d (pm: %s, rip: %p)\n", curr_proc->pid, curr_proc->pm == vmm_kernel_pm ? "kernel" : "user", curr_proc->regs.rip);
   memcpy(regs, &curr_proc->regs, sizeof(registers_t));
 
-  // Finally, load our pagemap
-  // if (memcmp(curr_proc->name, "Init", 4)== 0) {
   vmm_load_pagemap(curr_proc->pm);
-  // asm("cli");
-  // while (1)
-  //     asm("hlt");}
 }

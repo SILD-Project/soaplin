@@ -1,0 +1,8 @@
+#pragma once
+
+int strlen(const char *str);
+int strcmp(const char *s1, const char *s2);
+char *strchr(const char *s, int c);
+char *strcpy(char *dest, const char *src);
+char *strrchr(const char *s, int c);
+int oct2bin(unsigned char *str, int size);

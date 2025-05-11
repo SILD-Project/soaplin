@@ -83,7 +83,6 @@ run-aarch64: ovmf/ovmf-code-$(ARCH).fd $(IMAGE_NAME).iso
 
 .PHONY: run-hdd-aarch64
 run-hdd-aarch64: ovmf/ovmf-code-$(ARCH).fd $(IMAGE_NAME).hdd
-	@echo "  Starting QEMU with $(IMAGE_NAME).hdd"
 	@qemu-system-$(ARCH) \
 		-M virt \
 		-cpu cortex-a72 \
@@ -204,8 +203,8 @@ $(IMAGE_NAME).iso: limine/limine kernel
 	@mkdir -p iso_root/boot/limine
 	@cp -v limine.conf iso_root/boot/limine/
 	@mkdir -p iso_root/EFI/BOOT
+	@cp -v initramfs.tar iso_root/
 ifeq ($(ARCH),x86_64)
-	@cp -v testing/sk-hello.elf iso_root/
 	@cp -v limine/limine-bios.sys limine/limine-bios-cd.bin limine/limine-uefi-cd.bin iso_root/boot/limine/
 	@cp -v limine/BOOTX64.EFI iso_root/EFI/BOOT/
 	@cp -v limine/BOOTIA32.EFI iso_root/EFI/BOOT/
