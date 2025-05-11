@@ -29,21 +29,6 @@ pagemap_t *vmm_alloc_pm() {
   pagemap_t *pm = (pagemap_t *)HIGHER_HALF((uint64_t)pmm_request_page());
   memset(pm, 0, PMM_PAGE_SIZE);
 
-  /*if (vmm_kernel_pm_exists) {
-      pm->toplevel = (uint64_t*)HIGHER_HALF((uint64_t)pmm_request_page());
-      memset(pm->toplevel, 0, PMM_PAGE_SIZE);
-
-      for (int i = 256; i < 512; i++) {
-          pm->toplevel[i] = vmm_kernel_pm->toplevel[i];
-      }
-  } else {
-
-  __asm__ volatile("mov %%cr3, %0" : "=r"(pm->toplevel) : : "memory");
-  pm->toplevel = HIGHER_HALF(pm->toplevel);
-  logln(info, "vmm", "Limine-provided kernel PML4: %p", pm->toplevel);
-
-  }*/
-
   pm->toplevel = (uint64_t *)HIGHER_HALF((uint64_t)pmm_request_page());
   memset(pm->toplevel, 0, PMM_PAGE_SIZE);
 

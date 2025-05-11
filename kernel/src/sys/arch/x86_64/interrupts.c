@@ -74,5 +74,6 @@ void exception_handler(registers_t *regs) {
     syscall_handle(regs);
   }
   // logln(info, "arch/ints", "Received interrupt %d\n", regs->int_no);
+  //vmm_load_pagemap(curr_proc->pm);
   pic_ack(regs->int_no - 32);
 }

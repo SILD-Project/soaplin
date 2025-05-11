@@ -3,12 +3,7 @@ section .text
     global _start
 
 _start:
-    int 0x80
-    int 0x80
-    int 0x80
-    int 0x80
-    int 0x80
-    int 0x80
-    int 0x80
+    mov rax, 10
 .hey:
+    add rax, 1
     jmp .hey
