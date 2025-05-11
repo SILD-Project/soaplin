@@ -4,6 +4,7 @@
 #include "mm/pmm.h"
 #include "sys/log.h"
 #include "vmm.h"
+#include <stdbool.h>
 #include <stddef.h>
 
 __attribute__((
@@ -150,15 +151,16 @@ void vmm_load_pagemap(pagemap_t *pm) {
 }
 
 static uint64_t *__vmm_get_next_lvl(uint64_t *level, uint64_t entry,
-                                    uint64_t flags) {
-  if (!(level[entry] & 1)) {
-    uint64_t *pml = HIGHER_HALF(pmm_request_page());
+                                    uint64_t flags, bool alloc) {
+  if (level[entry] & VMM_PRESENT)
+    return HIGHER_HALF(PTE_GET_ADDR(level[entry]));
+  if (alloc) {
+    uint64_t *pml = (uint64_t *)HIGHER_HALF(pmm_request_page());
     memset(pml, 0, PMM_PAGE_SIZE);
-    level[entry] = (uint64_t)PHYSICAL(pml);
-    
+    level[entry] = (uint64_t)PHYSICAL(pml) | flags;
+    return pml;
   }
-  level[entry] |= (flags & 0xFFF); 
-  return HIGHER_HALF(PTE_GET_ADDR(level[entry]));
+  return NULL;
 }
 
 uint64_t vmm_get_flags(pagemap_t *pm, uint64_t vaddr) {
@@ -167,9 +169,15 @@ uint64_t vmm_get_flags(pagemap_t *pm, uint64_t vaddr) {
   uint64_t pml2_entry = (vaddr >> 21) & 0x1ff;
   uint64_t pml1_entry = (vaddr >> 12) & 0x1ff;
 
-  uint64_t *pml3 = __vmm_get_next_lvl(pm->toplevel, pml4_entry, 0);
-  uint64_t *pml2 = __vmm_get_next_lvl(pml3, pml3_entry, 0);
-  uint64_t *pml1 = __vmm_get_next_lvl(pml2, pml2_entry, 0);
+  uint64_t *pml3 = __vmm_get_next_lvl(pm->toplevel, pml4_entry, 0, false);
+  if (!pml3)
+    return 0;
+  uint64_t *pml2 = __vmm_get_next_lvl(pml3, pml3_entry, 0, false);
+  if (!pml2)
+    return 0;
+  uint64_t *pml1 = __vmm_get_next_lvl(pml2, pml2_entry, 0, false);
+  if (!pml1)
+    return 0;
 
   return pml1[pml1_entry] & 0x7000000000000FFF;
 }
@@ -180,14 +188,17 @@ uint64_t virt_to_phys(pagemap_t *pagemap, uint64_t virt) {
   uint64_t pml2_idx = (virt >> 21) & 0x1FF;
   uint64_t pml1_idx = (virt >> 12) & 0x1FF;
 
-  uint64_t *pml3 = __vmm_get_next_lvl(pagemap->toplevel, pml4_idx, 0);
-  uint64_t *pml2 = __vmm_get_next_lvl(pml3, pml3_idx, 0);
-  uint64_t *pml1 = __vmm_get_next_lvl(pml2, pml2_idx, 0);
+  uint64_t *pml3 = __vmm_get_next_lvl(pagemap->toplevel, pml4_idx, 0, false);
+  if (!pml3)
+    return 0;
+  uint64_t *pml2 = __vmm_get_next_lvl(pml3, pml3_idx, 0, false);
+  if (!pml2)
+    return 0;
+  uint64_t *pml1 = __vmm_get_next_lvl(pml2, pml2_idx, 0, false);
+  if (!pml1)
+    return 0;
 
-  uint64_t phys_addr =
-      pml1[pml1_idx] &
-      0x000FFFFFFFFFF000; // Masque pour obtenir l'adresse physique (en retirant
-                          // les bits de flags)
+  uint64_t phys_addr = pml1[pml1_idx] & 0x000FFFFFFFFFF000;
 
   return phys_addr;
 }
@@ -198,9 +209,30 @@ void vmm_map(pagemap_t *pm, uint64_t vaddr, uint64_t paddr, uint64_t flags) {
   uint64_t pml2_entry = (vaddr >> 21) & 0x1ff;
   uint64_t pml1_entry = (vaddr >> 12) & 0x1ff;
 
-  uint64_t *pml3 = __vmm_get_next_lvl(pm->toplevel, pml4_entry, flags);
-  uint64_t *pml2 = __vmm_get_next_lvl(pml3, pml3_entry, flags);
-  uint64_t *pml1 = __vmm_get_next_lvl(pml2, pml2_entry, flags);
+  uint64_t *pml3 = __vmm_get_next_lvl(pm->toplevel, pml4_entry,
+                                      VMM_PRESENT | VMM_WRITABLE, true);
+  uint64_t *pml2 =
+      __vmm_get_next_lvl(pml3, pml3_entry, VMM_PRESENT | VMM_WRITABLE, true);
+  uint64_t *pml1 =
+      __vmm_get_next_lvl(pml2, pml2_entry, VMM_PRESENT | VMM_WRITABLE, true);
+
+  pml1[pml1_entry] = paddr | flags;
+}
+
+void vmm_map_user(pagemap_t *pm, uint64_t vaddr, uint64_t paddr,
+                  uint64_t flags) {
+  uint64_t pml4_entry = (vaddr >> 39) & 0x1ff;
+  uint64_t pml3_entry = (vaddr >> 30) & 0x1ff;
+  uint64_t pml2_entry = (vaddr >> 21) & 0x1ff;
+  uint64_t pml1_entry = (vaddr >> 12) & 0x1ff;
+
+  uint64_t *pml3 =
+      __vmm_get_next_lvl(pm->toplevel, pml4_entry, flags,
+                         true); // PML3 / Page Directory Pointer Entry
+  uint64_t *pml2 = __vmm_get_next_lvl(pml3, pml3_entry, flags,
+                                      true); // PML2 / Page Directory Entry
+  uint64_t *pml1 = __vmm_get_next_lvl(pml2, pml2_entry, flags,
+                                      true); // PML1 / Page Table Entry
 
   pml1[pml1_entry] = paddr | flags;
 }
@@ -211,13 +243,13 @@ void vmm_unmap(pagemap_t *pm, uint64_t vaddr) {
   uint64_t pml3_entry = (vaddr >> 30) & 0x1ff;
   uint64_t pml4_entry = (vaddr >> 39) & 0x1ff;
 
-  uint64_t *pml3 = __vmm_get_next_lvl(pm->toplevel, pml4_entry, 0);
+  uint64_t *pml3 = __vmm_get_next_lvl(pm->toplevel, pml4_entry, 0, false);
   if (pml3 == NULL)
     return;
-  uint64_t *pml2 = __vmm_get_next_lvl(pml3, pml3_entry, 0);
+  uint64_t *pml2 = __vmm_get_next_lvl(pml3, pml3_entry, 0, false);
   if (pml2 == NULL)
     return;
-  uint64_t *pml1 = __vmm_get_next_lvl(pml2, pml2_entry, 0);
+  uint64_t *pml1 = __vmm_get_next_lvl(pml2, pml2_entry, 0, false);
   if (pml1 == NULL)
     return;
 

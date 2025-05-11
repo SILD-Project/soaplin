@@ -1,11 +1,11 @@
-//#include "sys/log.h"
+// #include "sys/log.h"
 #include <sys/arch/x86_64/pic.h>
-//#include <sys/acpi.h>
+// #include <sys/acpi.h>
 #include <sys/arch/x86_64/io.h>
 
 void pic_init() {
-    //if (acpi_available)
-    //    return;
+  // if (acpi_available)
+  //     return;
 
   uint8_t a1, a2;
 

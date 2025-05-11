@@ -18,15 +18,18 @@
 extern struct flanterm_context *ft_ctx;
 
 void printf(char *format, ...) {
-    char buf[2048];
-    va_list lst;
-    va_start(lst, format);
-    npf_vsnprintf(buf, 2048, format, lst);
-    va_end(lst);
+  char buf[2048];
+  va_list lst;
+  va_start(lst, format);
+  npf_vsnprintf(buf, 2048, format, lst);
+  va_end(lst);
 
-    //rt_print(buf);
-    int i = 0; for (i; buf[i] != 0; i++);;
+  // rt_print(buf);
+  int i = 0;
+  for (i; buf[i] != 0; i++)
+    ;
+  ;
 
-    if (ft_ctx)
-        flanterm_write(ft_ctx, buf, i);
+  if (ft_ctx)
+    flanterm_write(ft_ctx, buf, i);
 }

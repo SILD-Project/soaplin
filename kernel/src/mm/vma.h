@@ -3,23 +3,21 @@
 
 #pragma once
 
-#include <mm/vmm.h>
 #include <mm/pmm.h>
+#include <mm/vmm.h>
 #include <stdint.h>
 
-typedef struct vma_region
-{
-    uint64_t start;
-    uint64_t size;
-    uint64_t flags;
-    struct vma_region *next;
-    struct vma_region *prev;
+typedef struct vma_region {
+  uint64_t start;
+  uint64_t size;
+  uint64_t flags;
+  struct vma_region *next;
+  struct vma_region *prev;
 } vma_region_t;
 
-typedef struct vma_context
-{
-    pagemap_t *pagemap;
-    vma_region_t *root;
+typedef struct vma_context {
+  pagemap_t *pagemap;
+  vma_region_t *root;
 } vma_context_t;
 
 extern vma_context_t *kernel_vma_context;

@@ -4,16 +4,16 @@
 #include <stdint.h>
 #define PMM_PAGE_SIZE 4096
 
-typedef struct pmm_stack
-{
-    uintptr_t *pages;
-    uint64_t idx;
-    uint64_t max;
+typedef struct pmm_stack {
+  uintptr_t *pages;
+  uint64_t idx;
+  uint64_t max;
 } pmm_stack_t;
 
 extern uint64_t hhdm_offset;
 
-#define DIV_ROUND_UP(x, y) (((uint64_t)(x) + ((uint64_t)(y) - 1)) / (uint64_t)(y))
+#define DIV_ROUND_UP(x, y)                                                     \
+  (((uint64_t)(x) + ((uint64_t)(y) - 1)) / (uint64_t)(y))
 #define ALIGN_UP(x, y) (DIV_ROUND_UP(x, y) * (uint64_t)(y))
 #define ALIGN_DOWN(x, y) (((uint64_t)(x) / (uint64_t)(y)) * (uint64_t)(y))
 

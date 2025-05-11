@@ -1,3 +1,1 @@
-void panic_ctx() {
-    
-}
+void panic_ctx() {}

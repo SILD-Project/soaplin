@@ -266,3 +266,8 @@ clean:
 distclean:
 	$(MAKE) -C kernel distclean
 	rm -rf iso_root *.iso *.hdd kernel-deps limine ovmf
+
+# Make some function to run clang-format all over the kernel
+.PHONY: format
+format:
+	clang-format -i -style=file $(shell find kernel/src -name '*.c' -or -name '*.h')
