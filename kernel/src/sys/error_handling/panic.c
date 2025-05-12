@@ -44,20 +44,6 @@ static void __panic_dump_regs() {
   __panic_regdump.rflags = 0;
   __panic_regdump.rsp = 0;
   __panic_regdump.ss = 0;
-}
-
-void panic() {
-  __panic_dump_regs();
-
-  log(" _  __                 _   ___           _          \n");
-  log("| |/ /___ _ _ _ _  ___| | | _ \\__ _ _ _ (_)__       \n");
-  log("| ' </ -_) '_| ' \\/ -_) | |  _/ _` | ' \\| / _|_ _ _ \n");
-  log("|_|\\_\\___|_| |_||_\\___|_| |_| \\__,_|_||_|_\\__(_|_|_)\n");
-  log("\n");
-  log("Due to an error that can't be recovered from, Soaplin was needed to "
-      "halt the PC.\n");
-  log("Please report this error to the Soaplin developers, along with the "
-      "information provided below:\n");
   log("-- REGISTER DUMP --\n");
   log("RDI: %p, RSI: %p, RDX: %p, RCX: %p, R8: %p, R9: %p\n",
       __panic_regdump.rdi, __panic_regdump.rsi, __panic_regdump.rdx,
@@ -67,7 +53,29 @@ void panic() {
       __panic_regdump.r10, __panic_regdump.r11, __panic_regdump.r12);
   log("R13: %p, R14: %p, R15: %p\n", __panic_regdump.r13, __panic_regdump.r14,
       __panic_regdump.r15);
-  log("System halted.");
+}
+
+void __panic_display_ascii_art() {
+  log(" _  __                 _   ___           _          \n");
+  log("| |/ /___ _ _ _ _  ___| | | _ \\__ _ _ _ (_)__       \n");
+  log("| ' </ -_) '_| ' \\/ -_) | |  _/ _` | ' \\| / _|_ _ _ \n");
+  log("|_|\\_\\___|_| |_||_\\___|_| |_| \\__,_|_||_|_\\__(_|_|_)\n");
+  log("\n");
+  log("Due to an error that can't be recovered from, Soaplin was needed to "
+      "halt the PC.\n");
+}
+
+
+void panic(char *msg) {
+  __panic_display_ascii_art();
+  
+  log("\n");
+  log("%s\n", msg);
+  log("\n");
+
+  __panic_dump_regs();
+
+  log("System halted: Please restart your computer manually.\n");
 
   asm("cli");
   for (;;)

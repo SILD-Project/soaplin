@@ -1,7 +1,5 @@
 #include "exec/elf.h"
 #include "exec/exec.h"
-#include "fs/tapefs.h"
-#include "fs/vfs.h"
 #include "mm/liballoc/liballoc.h"
 #include "mm/pmm.h"
 #include "mm/vma.h"
@@ -90,6 +88,8 @@ void kmain(void) {
   syscall_init();
   pit_init(1000);
   sched_init();
+
+  panic("No working initialization program found. (This is normal due to Soaplin's current state, so please do not report this as a bug)");
 
   log("kernel - Soaplin initialized sucessfully.\n");
 
