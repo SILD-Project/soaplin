@@ -41,6 +41,7 @@ void idt_init() {
 
   pic_init();
   pic_unmask_irq(1);
+  pic_unmask_irq(8);
 
   __asm__ volatile("lidt %0" : : "m"(idtr)); // load the new IDT
   __asm__ volatile("sti");                   // set the interrupt flag

@@ -45,7 +45,7 @@ void exception_handler(registers_t *regs) {
 
     log("ints - keyboard\n");
   } else if (regs->int_no == 32 + 8) {
-    rtc_handle_interrupt(regs);
+    log("rtc\n");
   } else if (regs->int_no == 0x80 - 32 || regs->int_no == 32) {
     pit_handler(regs);
   } else if (regs->int_no == 0x80) {
