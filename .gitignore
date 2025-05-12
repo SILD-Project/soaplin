@@ -4,3 +4,4 @@
 /.cache
 *.iso
 *.hdd
+/compile_commands.json
