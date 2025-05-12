@@ -21,3 +21,11 @@ The Soaplin kernel is a new Unix-like operating system kernel.
 
 ## Known bugs
 * If a user process calls the syscall handler by using interrupts, the system may crash due to a Page Fault.
+
+## Building
+To build Soaplin, you must ensure you have these:
+* The Netwide Assembler (nasm)
+* A compiler (In the future, a custom toolchain would be built.)
+* A linker
+
+Clone the repo, and run "make" in it!
