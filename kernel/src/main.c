@@ -18,11 +18,13 @@
 #include <sys/arch/x86_64/fpu.h>
 #include <sys/arch/x86_64/gdt.h>
 #include <sys/arch/x86_64/idt.h>
-#include <sys/error_handling/panic.h>
+#include <sys/errhnd/panic.h>
 #include <sys/gfx/flanterm/backends/fb.h>
 #include <sys/gfx/flanterm/flanterm.h>
 #include <sys/log.h>
 #include <sys/printf.h>
+#include <fs/vfs.h>
+#include <fs/hellofs.h>
 
 __attribute__((
     used, section(".limine_requests"))) static volatile LIMINE_BASE_REVISION(3);
@@ -84,12 +86,22 @@ void kmain(void) {
     while (1)
       asm("hlt");
   }
-
+  
   syscall_init();
   pit_init(1000);
   sched_init();
+  
+  vfs_init();
+  if (hellofs_init() < 0) {
+    log("kernel - Failed to initialize HelloFS\n");
+  } else {
+    log("kernel - HelloFS initialized successfully\n");
+  }
 
-  panic("No working initialization program found. (This is normal due to Soaplin's current state, so please do not report this as a bug)");
+  
+
+  panic("No working initialization program found. (This is normal due to "
+        "Soaplin's current state, so please do not report this as a bug)");
 
   log("kernel - Soaplin initialized sucessfully.\n");
 

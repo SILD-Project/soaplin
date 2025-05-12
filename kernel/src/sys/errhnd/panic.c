@@ -65,10 +65,9 @@ void __panic_display_ascii_art() {
       "halt the PC.\n");
 }
 
-
 void panic(char *msg) {
   __panic_display_ascii_art();
-  
+
   log("\n");
   log("%s\n", msg);
   log("\n");

@@ -6,3 +6,4 @@ char *strchr(const char *s, int c);
 char *strcpy(char *dest, const char *src);
 char *strrchr(const char *s, int c);
 int oct2bin(unsigned char *str, int size);
+char *strdup(const char *str);
