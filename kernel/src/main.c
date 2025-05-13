@@ -24,7 +24,6 @@
 #include <sys/log.h>
 #include <sys/printf.h>
 #include <fs/vfs.h>
-#include <fs/hellofs.h>
 
 __attribute__((
     used, section(".limine_requests"))) static volatile LIMINE_BASE_REVISION(3);
@@ -91,14 +90,9 @@ void kmain(void) {
   pit_init(1000);
   sched_init();
   
-  vfs_init();
-  if (hellofs_init() < 0) {
-    log("kernel - Failed to initialize HelloFS\n");
-  } else {
-    log("kernel - HelloFS initialized successfully\n");
-  }
+  //vfs_init();
 
-  
+
 
   panic("No working initialization program found. (This is normal due to "
         "Soaplin's current state, so please do not report this as a bug)");
