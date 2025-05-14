@@ -27,7 +27,7 @@ void log(char *format, ...) {
   if (ft_ctx)
     flanterm_write(ft_ctx, buf, strlen(buf));
 
-  /*for (int i = 0;; i++) {
+  for (int i = 0;; i++) {
     if (date[i] == '\0')
       break;
 
@@ -39,7 +39,7 @@ void log(char *format, ...) {
       break;
 
     outb(0xE9, buf[i]);
-  }*/
+  }
 
   // spinlock_release(&log_lock);
 }

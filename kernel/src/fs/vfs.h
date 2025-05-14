@@ -11,27 +11,36 @@ struct vnode;
 typedef uint32_t vnode_type_t;
 
 typedef struct vnode_ops {
-    int (*read)(struct vnode* vn, void* buf, size_t size);
+    int (*read)(struct vnode* vn, void* buf, size_t off, size_t size);
+    struct vnode* (*lookup)(struct vnode* vn, const char* name);
 } vnode_ops_t;
 
 typedef struct vnode {
     char name[256];
     vnode_type_t type;
-    struct vnode* parent;
-    struct vnode* child;
-    struct vnode* next;
+    uint32_t refcount;
+    //struct vnode* parent;
+    //struct vnode* child;
+    //struct vnode* next;
 
     struct vnode_ops* ops;
     void* internal;
 } vnode_t;
 
+typedef struct mountpoint {
+    char name[32];
+    struct fs* fs;
+    vnode_t* mountpoint;
+} mountpoint_t;
+
 typedef struct fs {
     char name[32];
-    int (*mount)(struct vnode** root);
+    struct vnode* root;
+    int (*mount)(struct vnode* mountpoint);
 } fs_t;
 
 void vfs_init(void);
 int vfs_mount(char *path, fs_t* fs);
 int vfs_unmount(char *path);
 int vfs_open(const char* path, vnode_t** result);
-int vfs_read(vnode_t* vn, void* buf, size_t size);
+int vfs_read(vnode_t* vn, void* buf, size_t off, size_t size);

@@ -1,9 +1,12 @@
 #include "sys/arch/x86_64/idt.h"
+#include <mm/memop.h>
 #include <sys/log.h>
 
 static registers_t __panic_regdump;
 
 static void __panic_dump_regs() {
+  memset(&__panic_regdump, 0, sizeof(registers_t));
+
   asm volatile(
       // Save general purpose registers
       "movq %%r15, %0\n\t"
@@ -44,15 +47,22 @@ static void __panic_dump_regs() {
   __panic_regdump.rflags = 0;
   __panic_regdump.rsp = 0;
   __panic_regdump.ss = 0;
+}
+
+static void __panic_display_regs(registers_t *regs) {
   log("-- REGISTER DUMP --\n");
   log("RDI: %p, RSI: %p, RDX: %p, RCX: %p, R8: %p, R9: %p\n",
-      __panic_regdump.rdi, __panic_regdump.rsi, __panic_regdump.rdx,
-      __panic_regdump.rcx, __panic_regdump.r8, __panic_regdump.r9);
+      regs->rdi, regs->rsi, regs->rdx,
+      regs->rcx, regs->r8, regs->r9);
   log("RAX: %p, RBP: %p, RBX: %p, R10: %p, R11: %p, R12: %p\n",
-      __panic_regdump.rax, __panic_regdump.rbp, __panic_regdump.rbx,
-      __panic_regdump.r10, __panic_regdump.r11, __panic_regdump.r12);
-  log("R13: %p, R14: %p, R15: %p\n", __panic_regdump.r13, __panic_regdump.r14,
-      __panic_regdump.r15);
+      regs->rax, regs->rbp, regs->rbx,
+      regs->r10, regs->r11, regs->r12);
+  log("R13: %p, R14: %p, R15: %p\n", regs->r13, regs->r14,
+      regs->r15);
+  log("RIP: %p, CS: %d, SS: %d, RFLAGS: %d, INTERRUPT: %d, ERROR CODE: %d\n",
+      regs->rip, regs->cs, regs->ss,
+      regs->rflags, regs->int_no, regs->err_code);
+  log("RSP: %p\n", regs->rsp);
 }
 
 void __panic_display_ascii_art() {
@@ -73,6 +83,26 @@ void panic(char *msg) {
   log("\n");
 
   __panic_dump_regs();
+  __panic_display_regs(&__panic_regdump);
+
+  log("System halted: Please restart your computer manually.\n");
+
+  asm("cli");
+  for (;;)
+    asm("hlt");
+}
+
+void panic_ctx(char *msg, registers_t *regs) {
+  __panic_display_ascii_art();
+
+  log("\n");
+  log("%s\n", msg);
+  log("\n");
+
+  if (regs)
+    __panic_display_regs(regs);
+  else
+    log("No register context provided.\n");
 
   log("System halted: Please restart your computer manually.\n");
 
