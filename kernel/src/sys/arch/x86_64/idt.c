@@ -39,14 +39,13 @@ void idt_init() {
   idt_set_descriptor(vector, isr_stub_table[vector], 0xEE);
   vectors[vector] = 1;
 
-  pic_init();
-  pic_unmask_irq(1);
-  pic_unmask_irq(8);
+  // Do not use the legacy PIC.
+  //pic_init();
+  //pic_unmask_irq(1);
+  //pic_unmask_irq(8);
 
   __asm__ volatile("lidt %0" : : "m"(idtr)); // load the new IDT
   __asm__ volatile("sti");                   // set the interrupt flag
 
-  // logln(progress, "kinit stage 1", "IDT initialized! Time to receive
-  // interrupts!\n");
   log("idt - initialized\n");
 }

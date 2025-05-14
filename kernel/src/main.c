@@ -73,11 +73,9 @@ void kmain(void) {
 
   gdt_init(&kstack[8192]);
   idt_init();
-  fpu_activate();
-  sse_init();
-
   pmm_init();
   vmm_init();
+  
   kernel_vma_context = vma_create_context(vmm_kernel_pm);
   if (!kernel_vma_context) {
     log("kernel - vma ctx creation failed. halting\n");
@@ -86,9 +84,10 @@ void kmain(void) {
       asm("hlt");
   }
   
+  acpi_init();
   syscall_init();
-  pit_init(1000);
-  sched_init();
+  //pit_init(1000);
+  //sched_init();
   
   //vfs_init();
 
