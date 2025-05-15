@@ -8,6 +8,8 @@ static syscall syscall_table[1024];
 
 static int syscall_initialized = 0;
 
+extern void __x86_64_syscall_init();
+
 // Stub function for undefined syscalls.
 static uint64_t __syscall_undefined() { return 0; }
 
@@ -30,6 +32,8 @@ void syscall_handle(registers_t *regs) {
     return;
   }
 
+  log("Hello!\n");
+
   regs->rax = syscall_table[regs->rax](regs->rdi, regs->rsi, regs->rdx,
                                        regs->rcx, regs->r8, regs->r9);
   return;
@@ -48,9 +52,11 @@ void syscall_register(int id, syscall handler) {
 
 extern void syscall_exit(int exit_code);
 
-void syscall_init() {
+void syscall_init() { 
   for (int i = 0; i < 1024; i++)
     syscall_table[i] = (syscall)__syscall_undefined;
 
   syscall_register(0, (syscall)syscall_exit);
+
+  __x86_64_syscall_init();
 }

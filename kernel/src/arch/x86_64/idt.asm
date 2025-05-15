@@ -42,7 +42,7 @@ isr_stub_%+%1:
 
     mov rdi, rsp
 
-    call exception_handler
+    call idt_int_handler
 
     popall
 
@@ -58,7 +58,7 @@ isr_stub_%+%1:
 
     mov rdi, rsp
 
-    call exception_handler
+    call idt_int_handler
 
     popall
 
@@ -66,7 +66,7 @@ isr_stub_%+%1:
     iretq
 %endmacro
 
-extern exception_handler
+extern idt_int_handler
 isr_no_err_stub 0
 isr_no_err_stub 1
 isr_no_err_stub 2

@@ -1,11 +1,13 @@
 #include "sched/sched.h"
+#include "arch/x86_64/msr.h"
 #include "mm/memop.h"
 #include "mm/pmm.h"
 #include "mm/vmm.h"
-#include "sys/arch/x86_64/idt.h"
+#include "arch//x86_64/idt.h"
 #include "sys/log.h"
 #include <lib/string.h>
 #include <stddef.h>
+#include <mm/liballoc/liballoc.h>
 
 sched_process *proc_list;
 sched_process *curr_proc;
@@ -31,7 +33,7 @@ void sched_init() {
 
   // We must initialize the process list.
   // By default, sched_create will append to this list.
-  proc_list = pmm_request_page();
+  proc_list = malloc(sizeof(sched_process));
   memcpy(proc_list->name, "System\0", 7);
   proc_list->pid = -1;
   proc_list->type = SCHED_EMPTY;
@@ -49,7 +51,7 @@ void sched_init() {
 sched_process *sched_create(char *name, uint64_t entry_point, pagemap_t *pm,
                             uint32_t flags) {
 
-  sched_process *proc = pmm_request_page();
+  sched_process *proc = malloc(sizeof(sched_process));
   memset(proc, 0, sizeof(sched_process));
 
   memcpy(proc->name, name, strlen(name) > 128 ? 128 : strlen(name));
@@ -64,10 +66,12 @@ sched_process *sched_create(char *name, uint64_t entry_point, pagemap_t *pm,
   proc->pm = pm;
 
   uint64_t *stack_phys = pmm_request_page();
+  uint64_t *kstack_phys = pmm_request_page();
   uint64_t *stack_virt = (uint64_t *)0x40000000;
 
+  proc->kernel_stack = HIGHER_HALF(kstack_phys) + PMM_PAGE_SIZE;
   if (flags == SCHED_KERNEL_PROCESS) {
-    proc->stack_base = stack_phys;
+    proc->stack_base = HIGHER_HALF(stack_phys);
     proc->stack_base_physical = stack_phys;
     proc->stack_end = proc->stack_base + PMM_PAGE_SIZE;
   } else if (flags == SCHED_USER_PROCESS) {
@@ -109,6 +113,7 @@ sched_process *sched_create(char *name, uint64_t entry_point, pagemap_t *pm,
     log("sched - Standby mode has been"
         "disabled.\n");
   }
+
 
   log("sched - created process '%s' (pid: %d, rip: %p)\n", proc->name,
       proc->pid, proc->regs.rip);
@@ -152,5 +157,7 @@ void schedule(registers_t *regs) {
 
   memcpy(regs, &curr_proc->regs, sizeof(registers_t));
 
+  wrmsr(IA32_GS_KERNEL_MSR, (uint64_t)curr_proc);
+  //log("sched - proc %d\n", curr_proc->pid);
   vmm_load_pagemap(curr_proc->pm);
 }

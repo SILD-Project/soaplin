@@ -1,7 +1,7 @@
 // #include "sys/log.h"
+#include <arch/x86_64/gdt.h>
 #include <mm/memop.h>
 #include <stdint.h>
-#include <sys/arch/x86_64/gdt.h>
 #include <sys/log.h>
 
 gdt_table def_table = {{

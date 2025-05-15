@@ -1,6 +1,6 @@
 #pragma once
 
-#include "sys/arch/x86_64/idt.h"
+#include "arch//x86_64/idt.h"
 #include <stdint.h>
 
 /// A function that defines a system call.

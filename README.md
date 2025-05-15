@@ -7,6 +7,7 @@ The Soaplin kernel is a new Unix-like operating system kernel.
 * Simple pre-emptive scheduler
 * Ring 3 (user mode) support
 * ELF loader
+* ACPI
 
 ## In the works
 * Virtual File System
@@ -29,3 +30,8 @@ To build Soaplin, you must ensure you have these:
 * A linker
 
 Clone the repo, and run "make" in it!
+
+## Acknowledgements
+Thanks to all these people :heart:
+* Kevin Alavik (kevinalavik): VMAs implementation
+* Astrido (asterd-og): IOAPIC/LAPIC (from ZanOS)

@@ -1,7 +1,7 @@
 #pragma once
 
 #include "mm/vmm.h"
-#include "sys/arch/x86_64/idt.h"
+#include "arch/x86_64/idt.h"
 
 #define SCHED_KERNEL_PROCESS 0 // A process that runs in kernel mode.
 #define SCHED_USER_PROCESS                                                     \
@@ -11,6 +11,9 @@
 typedef enum { SCHED_RUNNING, SCHED_DIED, SCHED_EMPTY } sched_proc_type;
 
 typedef struct _sched_process {
+  uint64_t *stack_base;
+  uint64_t *kernel_stack; // Kernel-mode stack used for "syscall"
+
   char name[128];
   int pid;
   int type;
@@ -20,7 +23,6 @@ typedef struct _sched_process {
   pagemap_t *pm;
 
   uint64_t *stack_end;
-  uint64_t *stack_base;
   uint64_t *stack_base_physical;
 
   struct _sched_process *next;

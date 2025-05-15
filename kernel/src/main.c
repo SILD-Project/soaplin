@@ -1,3 +1,5 @@
+#include "dev/ioapic.h"
+#include "dev/lapic.h"
 #include "exec/elf.h"
 #include "exec/exec.h"
 #include "mm/liballoc/liballoc.h"
@@ -6,8 +8,10 @@
 #include "mm/vmm.h"
 #include "sched/sched.h"
 #include "sys/acpi.h"
-#include "sys/arch/x86_64/pit.h"
-#include "sys/arch/x86_64/sse.h"
+#include "sys/acpi/madt.h"
+#include "arch//x86_64/pit.h"
+#include "arch//x86_64/smp.h"
+#include "arch//x86_64/sse.h"
 #include "sys/syscall.h"
 #include <font.h>
 #include <limine.h>
@@ -15,9 +19,9 @@
 #include <stdbool.h>
 #include <stddef.h>
 #include <stdint.h>
-#include <sys/arch/x86_64/fpu.h>
-#include <sys/arch/x86_64/gdt.h>
-#include <sys/arch/x86_64/idt.h>
+#include <arch//x86_64/fpu.h>
+#include <arch//x86_64/gdt.h>
+#include <arch//x86_64/idt.h>
 #include <sys/errhnd/panic.h>
 #include <sys/gfx/flanterm/backends/fb.h>
 #include <sys/gfx/flanterm/flanterm.h>
@@ -69,7 +73,7 @@ void kmain(void) {
         VGA8, 8, 16, 0, 0, 0, 0);
   }
 
-  printf("\n  Soaplin 1.0-sild is booting up your computer...\n\n");
+  printf("\n  Soaplin 0.7-sild is booting up your computer...\n\n");
 
   gdt_init(&kstack[8192]);
   idt_init();
@@ -85,16 +89,26 @@ void kmain(void) {
   }
   
   acpi_init();
+  madt_init();
+  ioapic_init();
+  lapic_init();
+  pit_init();
+  smp_init();
+
   syscall_init();
-  //pit_init(1000);
-  //sched_init();
+  sched_init();
   
   //vfs_init();
 
 
 
-  panic("No working initialization program found. (This is normal due to "
-        "Soaplin's current state, so please do not report this as a bug)");
+  //panic("No working initialization program found. (This is normal due to "
+  //      "Soaplin's current state, so please do not report this as a bug)");
+
+  program_t *p = elf_load(module_request.response->modules[0]->address, 1);
+
+  sched_process *proc = sched_create("Test", p->entry, p->pm,
+                                      SCHED_USER_PROCESS);
 
   log("kernel - Soaplin initialized sucessfully.\n");
 

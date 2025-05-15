@@ -1,4 +1,5 @@
-#include "sys/arch/x86_64/idt.h"
+#include "arch//x86_64/idt.h"
+#include "lib/spinlock.h"
 #include <mm/memop.h>
 #include <sys/log.h>
 
@@ -49,6 +50,39 @@ static void __panic_dump_regs() {
   __panic_regdump.ss = 0;
 }
 
+static void __panic_display_page_fault(registers_t *regs) {
+    if (regs->int_no != 14) // 14 is the page fault interrupt number
+        return;
+
+    uint64_t cr2;
+    asm volatile("mov %%cr2, %0" : "=r"(cr2));
+    
+    log("Page Fault Details:\n");
+    log("Faulting Address (CR2): 0x%lx\n", cr2);
+    log("Error Code: %d\n", regs->err_code);
+    log("Flags:\n");
+    if (!(regs->err_code & (1 << 0)))
+        log("  - Page Not Present\n");
+    else
+        log("  - Protection Violation\n");
+    
+    if (regs->err_code & (1 << 1))
+        log("  - Write Access\n");
+    else
+        log("  - Read Access\n");
+    
+    if (regs->err_code & (1 << 2))
+        log("  - User-Mode Access\n");
+    else
+        log("  - Kernel-Mode Access\n");
+    
+    if (regs->err_code & (1 << 3))
+        log("  - Reserved Bits Set\n");
+    
+    if (regs->err_code & (1 << 4))
+        log("  - Instruction Fetch\n");
+}
+
 static void __panic_display_regs(registers_t *regs) {
   log("-- REGISTER DUMP --\n");
   log("RDI: %p, RSI: %p, RDX: %p, RCX: %p, R8: %p, R9: %p\n",
@@ -59,10 +93,13 @@ static void __panic_display_regs(registers_t *regs) {
       regs->r10, regs->r11, regs->r12);
   log("R13: %p, R14: %p, R15: %p\n", regs->r13, regs->r14,
       regs->r15);
-  log("RIP: %p, CS: %d, SS: %d, RFLAGS: %d, INTERRUPT: %d, ERROR CODE: %d\n",
+  log("RIP: %p, CS: %x, SS: %x, RFLAGS: %d, INTERRUPT: %d, ERROR CODE: %d\n",
       regs->rip, regs->cs, regs->ss,
       regs->rflags, regs->int_no, regs->err_code);
   log("RSP: %p\n", regs->rsp);
+  
+  if (regs->int_no == 14) // If it's a page fault
+    __panic_display_page_fault(regs);
 }
 
 void __panic_display_ascii_art() {
@@ -104,6 +141,8 @@ void panic_ctx(char *msg, registers_t *regs) {
   else
     log("No register context provided.\n");
 
+
+    
   log("System halted: Please restart your computer manually.\n");
 
   asm("cli");

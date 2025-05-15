@@ -2,6 +2,11 @@
 
 #include <stdint.h>
 
+// VT = Vector type
+#define IDT_VT_UNDEFINED 0
+#define IDT_VT_EXCEPTION 1
+#define IDT_VT_IRQ       2
+
 typedef struct {
   uint64_t r15;
   uint64_t r14;
@@ -50,5 +55,8 @@ typedef struct {
   uint64_t base;
 } __attribute__((packed)) idtr_t;
 
+typedef void(*idt_irq_handler_t)(registers_t *regs);
+
+void idt_register_irq(uint8_t vector, void *isr);
 void idt_set_descriptor(uint8_t vector, void *isr, uint8_t flags);
 void idt_init(void);
