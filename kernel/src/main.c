@@ -57,7 +57,11 @@ struct flanterm_context *ft_ctx;
 
 char kstack[8192];
 
-void kmain(void) {
+void test3() { *((uint8_t*)0x0) = (uint8_t)0xFF; }
+void test2() { test3();}
+void test1() { test2(); }
+
+void __kmain(void) {
   if (framebuffer_request.response != NULL) {
 
     struct limine_framebuffer *framebuffer =
@@ -97,6 +101,7 @@ void kmain(void) {
 
   syscall_init();
   sched_init();
+  test1();
 
   // vfs_init();
 
@@ -105,6 +110,7 @@ void kmain(void) {
 
   program_t *p = elf_load(module_request.response->modules[0]->address, 1);
 
+
   sched_process *proc =
       sched_create("Test", p->entry, p->pm, SCHED_USER_PROCESS);
 
@@ -112,6 +118,5 @@ void kmain(void) {
 
   pit_enable();
   while (1)
-    ;
-  ;
+    ;;
 }

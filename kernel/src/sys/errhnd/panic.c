@@ -1,3 +1,4 @@
+#include "sys/errhnd/panic.h"
 #include "arch/x86_64/idt.h"
 #include "lib/spinlock.h"
 #include <mm/memop.h>
@@ -59,7 +60,9 @@ static void __panic_display_page_fault(registers_t *regs) {
   uint64_t cr2;
   asm volatile("mov %%cr2, %0" : "=r"(cr2));
 
-  log("Page Fault Details:\n");
+  log("-- PAGE FAULT DETAILS --\n");
+  log("This appears to be a page fault.\n");
+  log("\n");
   log("Faulting Address (CR2): 0x%lx\n", cr2);
   log("Error Code: %d\n", regs->err_code);
   log("Flags:\n");
@@ -83,6 +86,7 @@ static void __panic_display_page_fault(registers_t *regs) {
 
   if (regs->err_code & (1 << 4))
     log("  - Instruction Fetch\n");
+  log("\n");
 }
 
 static void __panic_display_regs(registers_t *regs) {
@@ -96,9 +100,58 @@ static void __panic_display_regs(registers_t *regs) {
       regs->rip, regs->cs, regs->ss, regs->rflags, regs->int_no,
       regs->err_code);
   log("RSP: %p\n", regs->rsp);
+  log("\n");
 
   if (regs->int_no == 14) // If it's a page fault
     __panic_display_page_fault(regs);
+}
+
+static void __panic_display_bt(registers_t *regs) {
+  if (regs->cs == 0x43 || regs->cs == 0x3B) {
+    log("The backtrace can't be dumped from a userspace process.\n");
+    return;  // Don't try to backtrace userspace
+  }
+
+  log("-- BACKTRACE --\n");
+
+  // First print the current instruction pointer from the interrupt frame
+  if (regs->rip) {
+    log("* %p (current)\n", regs->rip);
+  }
+
+  uint64_t *frame = (uint64_t*)regs->rbp;
+  if (!frame || (uint64_t)frame < 0xffffffff80000000) {
+    log("No further stack frames available\n");
+    return;
+  }
+
+  // Frame format in x86_64:
+  // [rbp] -> previous rbp
+  // [rbp+8] -> return address
+  int depth = 0;
+  while (frame && depth < 16) {  // Limit depth to avoid infinite loops
+    // Validate both frame and return address pointers
+    uint64_t *ret_addr_ptr = frame + 1;
+    if ((uint64_t)ret_addr_ptr < 0xffffffff80000000) {
+      break;
+    }
+
+    uint64_t ret_addr = *ret_addr_ptr;
+    if (ret_addr < 0xffffffff80000000 || ret_addr > 0xfffffffffffff000) {
+      break;
+    }
+
+    log("* %p\n", ret_addr);
+
+    uint64_t next_rbp = *frame;
+    if (next_rbp < 0xffffffff80000000 || next_rbp > 0xfffffffffffff000) {
+      break;
+    }
+    
+    frame = (uint64_t*)next_rbp;
+    depth++;
+  }
+  log("\n");
 }
 
 void __panic_display_ascii_art() {
@@ -144,6 +197,8 @@ void panic_ctx(char *msg, registers_t *regs) {
     __panic_display_regs(regs);
   else
     log("No register context provided.\n");
+
+  __panic_display_bt(regs);
 
   log("System halted: Please restart your computer manually.\n");
 
