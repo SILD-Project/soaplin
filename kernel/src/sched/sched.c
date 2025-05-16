@@ -87,8 +87,8 @@ sched_process *sched_create(char *name, uint64_t entry_point, pagemap_t *pm,
     proc->regs.cs = 0x28; // Run in kernel mode
     proc->regs.ss = 0x30;
   } else if (flags == SCHED_USER_PROCESS) {
-    proc->regs.cs = 0x38 | 3; // Run in user mode
-    proc->regs.ss = 0x40 | 3;
+    proc->regs.cs = 0x40 | 3; // Run in user mode
+    proc->regs.ss = 0x38 | 3;
   }
   proc->regs.rflags = 0x202; // Enable interrupts
   proc->regs.rsp = (uint64_t)proc->stack_end;
