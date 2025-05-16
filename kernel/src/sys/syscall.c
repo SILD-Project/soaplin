@@ -14,7 +14,7 @@ extern void __x86_64_syscall_init();
 static uint64_t __syscall_undefined() { return 0; }
 
 void syscall_handle(registers_t *regs) {
-  if (regs->rax > 1024) {
+  if (regs->rax >= 1024) {
     log("syscall - syscall_handle was called with rax better than what Soaplin "
         "supports (1024). did you forget to set rax?\n");
     return;
@@ -50,13 +50,15 @@ void syscall_register(int id, syscall handler) {
   log("syscall - System call %d has been set to %p\n", id, handler);
 }
 
+extern void syscall_write(int fd, const char *buf, size_t count);
 extern void syscall_exit(int exit_code);
 
 void syscall_init() {
   for (int i = 0; i < 1024; i++)
     syscall_table[i] = (syscall)__syscall_undefined;
 
-  syscall_register(0, (syscall)syscall_exit);
+  syscall_register(1, (syscall)syscall_write);
+  syscall_register(60, (syscall)syscall_exit);
 
   __x86_64_syscall_init();
 }

@@ -131,7 +131,7 @@ void __kmain(void) {
 
 
   sched_process *proc =
-      sched_create("Test", p->entry, p->pm, SCHED_USER_PROCESS);
+      sched_from_program(p);
 
   log("kernel - Soaplin initialized sucessfully.\n");
 

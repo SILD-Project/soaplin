@@ -1,6 +1,7 @@
 #pragma once
 
 #include "arch/x86_64/idt.h"
+#include "exec/exec.h"
 #include "mm/vmm.h"
 
 #define SCHED_KERNEL_PROCESS 0 // A process that runs in kernel mode.
@@ -38,5 +39,8 @@ extern sched_process *proc_list;
 void sched_init();
 sched_process *sched_create(char *name, uint64_t entry_point, pagemap_t *pm,
                             uint32_t flags);
+
+sched_process *sched_from_program(program_t *prog);
+
 void sched_exit(int exit_code);
 void schedule(registers_t *regs);

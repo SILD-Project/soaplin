@@ -47,6 +47,12 @@ program_t *elf_load(char *data, int user) {
 
   for (uint16_t i = 0; i < ehdr->e_phnum; i++) {
     log("elf - ELF segment type: %d\n", phdr[i].p_type);
+
+    if (phdr[i].p_type == PT_INTERP) {
+      log("elf - A PT_INTERP program header was found. This was meant to be a dynamically-linked program, which Soaplin doesn't supports.\n");
+      return NULL;
+    }
+
     if (phdr[i].p_type != PT_LOAD)
       continue;
 
@@ -58,7 +64,9 @@ program_t *elf_load(char *data, int user) {
     uint64_t flags = VMM_PRESENT;
     if (phdr[i].p_flags & PF_W)
       flags |= VMM_WRITABLE;
-    if (!(phdr[i].p_flags & PF_X))
+    if (phdr[i].p_flags & PF_X)
+      flags &= ~VMM_NX;
+    else
       flags |= VMM_NX;
 
     if (user)
