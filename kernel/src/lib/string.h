@@ -9,3 +9,4 @@ char *strrchr(const char *s, int c);
 int oct2bin(unsigned char *str, int size);
 char *strdup(const char *str);
 char *strncpy(char *dest, const char *src, size_t n);
+char *strtok(char *str, char *delim);

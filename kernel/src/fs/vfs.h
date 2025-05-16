@@ -12,14 +12,14 @@ typedef uint32_t vnode_type_t;
 
 typedef struct vnode_ops {
   int (*read)(struct vnode *vn, void *buf, size_t off, size_t size);
-  struct vnode *(*lookup)(struct vnode *vn, const char *name);
+  int (*lookup)(struct vnode *vn, const char *name, struct vnode **out);
 } vnode_ops_t;
 
 typedef struct vnode {
   char name[256];
   vnode_type_t type;
   uint32_t refcount;
-  // struct vnode* parent;
+  struct vnode* parent; // If this vnode exists, then it's parent too.
   // struct vnode* child;
   // struct vnode* next;
 
@@ -36,11 +36,12 @@ typedef struct mountpoint {
 typedef struct fs {
   char name[32];
   struct vnode *root;
-  int (*mount)(struct vnode *mountpoint);
+  int (*mount)(struct fs *fs, struct vnode *mountpoint);
 } fs_t;
 
 void vfs_init(void);
 int vfs_mount(char *path, fs_t *fs);
 int vfs_unmount(char *path);
-int vfs_open(const char *path, vnode_t **result);
+int vfs_open(vnode_t *curdir, const char *path, vnode_t **out);
 int vfs_read(vnode_t *vn, void *buf, size_t off, size_t size);
+vnode_t *vfs_create_node(char *name, vnode_type_t type);

@@ -1,10 +1,12 @@
 #include "arch/x86_64/pit.h"
 #include "arch/x86_64/smp.h"
 #include "arch/x86_64/sse.h"
+#include "dbg/sym.h"
 #include "dev/ioapic.h"
 #include "dev/lapic.h"
 #include "exec/elf.h"
 #include "exec/exec.h"
+#include "fs/hellofs.h"
 #include "mm/liballoc/liballoc.h"
 #include "mm/pmm.h"
 #include "mm/vma.h"
@@ -57,10 +59,6 @@ struct flanterm_context *ft_ctx;
 
 char kstack[8192];
 
-void test3() { *((uint8_t*)0x0) = (uint8_t)0xFF; }
-void test2() { test3();}
-void test1() { test2(); }
-
 void __kmain(void) {
   if (framebuffer_request.response != NULL) {
 
@@ -92,6 +90,14 @@ void __kmain(void) {
       asm("hlt");
   }
 
+  ksym_init();
+  func *f = ksym_fromip((uint64_t)__kmain);
+  if (f) {
+    log("ksym: found %s at %p\n", f->name, f->ip);
+  } else {
+    log("ksym: not found\n");
+  }
+
   acpi_init();
   madt_init();
   ioapic_init();
@@ -99,9 +105,22 @@ void __kmain(void) {
   pit_init();
   smp_init();
 
+  vfs_init();
+  fs_t *hellofs = hellofs_init();
+  vfs_mount("/", hellofs);
+
+  vnode_t *vn;
+  vfs_open(NULL, "/hello", &vn);
+  if (vn) {
+    char buf[100];
+    vfs_read(vn, buf, 2, sizeof(buf));
+    log("Read from /hello: %s\n", buf);
+  } else {
+    log("Failed to open /hello\n");
+  }
+
   syscall_init();
   sched_init();
-  test1();
 
   // vfs_init();
 

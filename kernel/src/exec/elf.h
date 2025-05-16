@@ -123,3 +123,31 @@ typedef struct {
 } elf_program_t;
 
 program_t *elf_load(char *data, int user);
+
+// Those aren't used for loading, but used by
+// the kernel to resolve symbols from an instruction
+// pointer.
+#define SHT_SYMTAB          2    
+#define SHT_STRTAB          3
+
+typedef struct {
+  uint32_t st_name;
+  unsigned char st_info;
+  unsigned char st_other;
+  uint16_t st_shndx;
+  Elf64_Addr st_value;
+  uint64_t st_size;
+} Elf64_Sym;
+
+typedef struct {
+  uint32_t sh_name;
+  uint32_t sh_type;
+  uint64_t sh_flags;
+  Elf64_Addr sh_addr;
+  Elf64_Off sh_offset;
+  uint64_t sh_size;
+  uint32_t sh_link;
+  uint32_t sh_info;
+  uint64_t sh_addralign;
+  uint64_t sh_entsize;
+} Elf64_Shdr;

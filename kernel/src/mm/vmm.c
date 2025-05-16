@@ -15,7 +15,7 @@ __attribute__((
             .revision = 3,
             .mode = LIMINE_PAGING_MODE_X86_64_4LVL};
 
-__attribute__((used, section(".limine_requests"))) static volatile struct
+__attribute__((used, section(".limine_requests"))) volatile struct
     limine_executable_address_request karq = {
         .id = LIMINE_EXECUTABLE_ADDRESS_REQUEST,
         .revision = 0,

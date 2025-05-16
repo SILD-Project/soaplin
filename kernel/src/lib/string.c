@@ -1,6 +1,9 @@
 #include <lib/string.h>
 #include <mm/liballoc/liballoc.h>
+#include <mm/memop.h>
 #include <stddef.h>
+
+static char *olds;
 
 int strlen(const char *str) {
   int len = 0;
@@ -77,4 +80,55 @@ char *strncpy(char *dest, const char *src, size_t n) {
   for (; i < n; i++)
     dest[i] = '\0';
   return dest;
+}
+
+#define DICT_LEN 256
+
+static int *create_delim_dict(char *delim) {
+  int *d = (int *)malloc(sizeof(int) * DICT_LEN);
+  memset((void *)d, 0, sizeof(int) * DICT_LEN);
+
+  int i;
+  for (i = 0; i < strlen(delim); i++) {
+    d[delim[i]] = 1;
+  }
+  return d;
+}
+
+char *strtok(char *str, char *delim) {
+
+  static char *last, *to_free;
+  int *deli_dict = create_delim_dict(delim);
+
+  if (!deli_dict) {
+    return NULL;
+  }
+
+  if (str) {
+    last = (char *)malloc(strlen(str) + 1);
+    if (!last) {
+      free(deli_dict);
+    }
+    to_free = last;
+    strcpy(last, str);
+  }
+
+  while (deli_dict[*last] && *last != '\0') {
+    last++;
+  }
+  str = last;
+  if (*last == '\0') {
+    free(deli_dict);
+    free(to_free);
+    return NULL;
+  }
+  while (*last != '\0' && !deli_dict[*last]) {
+    last++;
+  }
+
+  *last = '\0';
+  last++;
+
+  free(deli_dict);
+  return str;
 }
