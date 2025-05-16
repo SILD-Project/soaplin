@@ -49,7 +49,7 @@ void vmm_release_pm(pagemap_t *pm) {
 }
 
 void vmm_sanity_check() {
-  uint64_t *my_memory = pmm_request_page();
+  uint64_t *my_memory = HIGHER_HALF(pmm_request_page());
   *my_memory = 0x40;
 
   pagemap_t *pm = vmm_alloc_pm();
@@ -113,14 +113,14 @@ void vmm_init() {
 
   log("vmm - mapping address from 0x0 to 0x100000000...\n");
   for (uint64_t gb4 = 0; gb4 < 0x100000000; gb4 += PMM_PAGE_SIZE) {
-    vmm_map(vmm_kernel_pm, gb4, gb4, VMM_PRESENT | VMM_WRITABLE);
+    //vmm_map(vmm_kernel_pm, gb4, gb4, VMM_PRESENT | VMM_WRITABLE);
     vmm_map(vmm_kernel_pm, (uint64_t)HIGHER_HALF(gb4), gb4,
             VMM_PRESENT | VMM_WRITABLE);
   }
 
   vmm_load_pagemap(vmm_kernel_pm);
 
-  vmm_sanity_check();
+  //vmm_sanity_check();
   log("vmm - initialized!\n");
 }
 

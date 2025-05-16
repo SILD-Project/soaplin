@@ -42,7 +42,7 @@ void *acpi_find_table(const char *name) {
 }
 
 void acpi_init() {
-  acpi_rsdp *rsdp = (acpi_rsdp *)rsdp_req.response->address;
+  acpi_rsdp *rsdp = (acpi_rsdp *)HIGHER_HALF(rsdp_req.response->address);
 
   if (memcmp(rsdp->sign, "RSD PTR", 7))
     panic("acpi: Invalid RSDP signature!");
@@ -50,9 +50,9 @@ void acpi_init() {
   if (rsdp->revision != 0) {
     __acpi_uses_xsdt = 1;
     acpi_xsdp *xsdp = (acpi_xsdp *)rsdp;
-    __acpi_rsdt_ptr = (acpi_xsdt *)HIGHER_HALF((uint64_t)xsdp->xsdt_addr);
+    __acpi_rsdt_ptr = (void *)HIGHER_HALF(xsdp->xsdt_addr);
     return;
   }
 
-  __acpi_rsdt_ptr = (acpi_rsdt *)HIGHER_HALF((uint64_t)rsdp->rsdt_addr);
+  __acpi_rsdt_ptr = (void *)HIGHER_HALF(rsdp->rsdt_addr);
 }

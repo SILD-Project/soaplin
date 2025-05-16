@@ -1,11 +1,11 @@
 #include "sys/acpi/madt.h"
 #include <dev/ioapic.h>
-#include <sys/log.h>
 #include <mm/pmm.h>
+#include <sys/log.h>
 
 void ioapic_init() {
-  madt_ioapic* ioapic = acpi_madt_ioapic_list[0];
-  
+  madt_ioapic *ioapic = acpi_madt_ioapic_list[0];
+
   uint32_t val = ioapic_read(ioapic, IOAPIC_VER);
   uint32_t count = ((val >> 16) & 0xFF);
 
@@ -14,44 +14,49 @@ void ioapic_init() {
   }
 
   for (uint8_t i = 0; i <= count; ++i) {
-    ioapic_write(ioapic, IOAPIC_REDTBL+2*i, 0x00010000 | (32 + i));
-    ioapic_write(ioapic, IOAPIC_REDTBL+2*i+1, 0);
+    ioapic_write(ioapic, IOAPIC_REDTBL + 2 * i, 0x00010000 | (32 + i));
+    ioapic_write(ioapic, IOAPIC_REDTBL + 2 * i + 1, 0);
   }
-  
+
   log("ioapic - initialized\n");
 }
 
-void ioapic_write(madt_ioapic* ioapic, uint8_t reg, uint32_t val) {
-  *((volatile uint32_t*)(HIGHER_HALF(ioapic->apic_addr) + IOAPIC_REGSEL)) = reg;
-  *((volatile uint32_t*)(HIGHER_HALF(ioapic->apic_addr) + IOAPIC_IOWIN)) = val;
+void ioapic_write(madt_ioapic *ioapic, uint8_t reg, uint32_t val) {
+  *((volatile uint32_t *)(HIGHER_HALF(ioapic->apic_addr) + IOAPIC_REGSEL)) =
+      reg;
+  *((volatile uint32_t *)(HIGHER_HALF(ioapic->apic_addr) + IOAPIC_IOWIN)) = val;
 }
 
-uint32_t ioapic_read(madt_ioapic* ioapic, uint8_t reg) {
-  *((volatile uint32_t*)(HIGHER_HALF(ioapic->apic_addr) + IOAPIC_REGSEL)) = reg;
-  return *((volatile uint32_t*)(HIGHER_HALF(ioapic->apic_addr) + IOAPIC_IOWIN));
+uint32_t ioapic_read(madt_ioapic *ioapic, uint8_t reg) {
+  *((volatile uint32_t *)(HIGHER_HALF(ioapic->apic_addr) + IOAPIC_REGSEL)) =
+      reg;
+  return *(
+      (volatile uint32_t *)(HIGHER_HALF(ioapic->apic_addr) + IOAPIC_IOWIN));
 }
 
-void ioapic_set_entry(madt_ioapic* ioapic, uint8_t idx, uint64_t data) {
+void ioapic_set_entry(madt_ioapic *ioapic, uint8_t idx, uint64_t data) {
   ioapic_write(ioapic, (uint8_t)(IOAPIC_REDTBL + idx * 2), (uint32_t)data);
-  ioapic_write(ioapic, (uint8_t)(IOAPIC_REDTBL + idx * 2 + 1), (uint32_t)(data >> 32));
+  ioapic_write(ioapic, (uint8_t)(IOAPIC_REDTBL + idx * 2 + 1),
+               (uint32_t)(data >> 32));
 }
 
-
-uint64_t ioapic_gsi_count(madt_ioapic* ioapic) {
+uint64_t ioapic_gsi_count(madt_ioapic *ioapic) {
   return (ioapic_read(ioapic, 1) & 0xff0000) >> 16;
 }
 
-madt_ioapic* ioapic_get_gsi(uint32_t gsi) {
+madt_ioapic *ioapic_get_gsi(uint32_t gsi) {
   for (uint64_t i = 0; i < acpi_madt_ioapic_length; i++) {
-    madt_ioapic* ioapic = acpi_madt_ioapic_list[i];
-    if (ioapic->gsi_base <= gsi && ioapic->gsi_base + ioapic_gsi_count(ioapic) > gsi)
+    madt_ioapic *ioapic = acpi_madt_ioapic_list[i];
+    if (ioapic->gsi_base <= gsi &&
+        ioapic->gsi_base + ioapic_gsi_count(ioapic) > gsi)
       return ioapic;
   }
-  return (madt_ioapic*)0;
+  return (madt_ioapic *)0;
 }
 
-void ioapic_redirect_gsi(uint32_t lapic_id, uint8_t vec, uint32_t gsi, uint16_t flags, bool mask) {
-  madt_ioapic* ioapic = ioapic_get_gsi(gsi);
+void ioapic_redirect_gsi(uint32_t lapic_id, uint8_t vec, uint32_t gsi,
+                         uint16_t flags, bool mask) {
+  madt_ioapic *ioapic = ioapic_get_gsi(gsi);
 
   uint64_t redirect = vec;
 
@@ -63,8 +68,10 @@ void ioapic_redirect_gsi(uint32_t lapic_id, uint8_t vec, uint32_t gsi, uint16_t 
     redirect |= (1 << 15);
   }
 
-  if (mask) redirect |= (1 << 16);
-  else redirect &= ~(1 << 16);
+  if (mask)
+    redirect |= (1 << 16);
+  else
+    redirect &= ~(1 << 16);
 
   redirect |= (uint64_t)lapic_id << 56;
 
@@ -73,9 +80,10 @@ void ioapic_redirect_gsi(uint32_t lapic_id, uint8_t vec, uint32_t gsi, uint16_t 
   ioapic_write(ioapic, redir_table + 1, (uint32_t)(redirect >> 32));
 }
 
-void ioapic_redirect_irq(uint32_t lapic_id, uint8_t vec, uint8_t irq, bool mask) {
+void ioapic_redirect_irq(uint32_t lapic_id, uint8_t vec, uint8_t irq,
+                         bool mask) {
   uint8_t idx = 0;
-  madt_iso* iso = (madt_iso*)0;
+  madt_iso *iso = (madt_iso *)0;
 
   while (idx < acpi_madt_iso_length) {
     iso = acpi_madt_iso_list[idx];
@@ -91,7 +99,7 @@ void ioapic_redirect_irq(uint32_t lapic_id, uint8_t vec, uint8_t irq, bool mask)
 
 uint32_t ioapic_get_redirect_irq(uint8_t irq) {
   uint8_t idx = 0;
-  madt_iso* iso;
+  madt_iso *iso;
 
   while (idx < acpi_madt_iso_length) {
     iso = acpi_madt_iso_list[idx];

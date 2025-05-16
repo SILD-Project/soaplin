@@ -10,7 +10,8 @@ void __x86_64_syscall_init() {
   wrmsr(IA32_EFER, efer);
   uint64_t star = 0;
   star |= ((uint64_t)0x28 << 32); // kernel cs
-  star |= ((uint64_t)0x30 << 48); // user cs base (SYSCALL adds 16 for CS=0x38, 24 for SS=0x40)
+  star |= ((uint64_t)0x30
+           << 48); // user cs base (SYSCALL adds 16 for CS=0x38, 24 for SS=0x40)
   wrmsr(IA32_STAR, star);
   wrmsr(IA32_LSTAR, (uint64_t)syscall_entry);
   wrmsr(IA32_CSTAR, 0x0);

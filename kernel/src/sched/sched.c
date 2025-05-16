@@ -1,13 +1,13 @@
 #include "sched/sched.h"
+#include "arch/x86_64/idt.h"
 #include "arch/x86_64/msr.h"
 #include "mm/memop.h"
 #include "mm/pmm.h"
 #include "mm/vmm.h"
-#include "arch//x86_64/idt.h"
 #include "sys/log.h"
 #include <lib/string.h>
-#include <stddef.h>
 #include <mm/liballoc/liballoc.h>
+#include <stddef.h>
 
 sched_process *proc_list;
 sched_process *curr_proc;
@@ -114,7 +114,6 @@ sched_process *sched_create(char *name, uint64_t entry_point, pagemap_t *pm,
         "disabled.\n");
   }
 
-
   log("sched - created process '%s' (pid: %d, rip: %p)\n", proc->name,
       proc->pid, proc->regs.rip);
   return proc;
@@ -158,6 +157,6 @@ void schedule(registers_t *regs) {
   memcpy(regs, &curr_proc->regs, sizeof(registers_t));
 
   wrmsr(IA32_GS_KERNEL_MSR, (uint64_t)curr_proc);
-  //log("sched - proc %d\n", curr_proc->pid);
+  // log("sched - proc %d\n", curr_proc->pid);
   vmm_load_pagemap(curr_proc->pm);
 }

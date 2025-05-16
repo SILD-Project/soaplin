@@ -45,12 +45,12 @@ typedef struct {
   uint64_t phys_lapic;
 } madt_lapic_addr;
 
-extern madt_ioapic* acpi_madt_ioapic_list[256];
-extern madt_iso* acpi_madt_iso_list[256];
+extern madt_ioapic *acpi_madt_ioapic_list[256];
+extern madt_iso *acpi_madt_iso_list[256];
 
 extern uint32_t acpi_madt_ioapic_length;
 extern uint32_t acpi_madt_iso_length;
 
-extern uint64_t* acpi_lapic_addr;
+extern uint64_t *acpi_lapic_addr;
 
 void madt_init();

@@ -1,11 +1,11 @@
 // #include "sys/log.h"
+#include "arch/x86_64/smp.h"
 #include "dev/ioapic.h"
 #include "dev/lapic.h"
 #include "mm/vmm.h"
-#include "arch/x86_64/smp.h"
 #include "sys/errhnd/panic.h"
+#include <arch/x86_64/idt.h>
 #include <stdbool.h>
-#include <arch//x86_64/idt.h>
 #include <sys/log.h>
 
 __attribute__((aligned(0x10))) static idt_entry_t idt[256];
@@ -50,9 +50,9 @@ void idt_init() {
   }
 
   // Do not use the legacy PIC.
-  //pic_init();
-  //pic_unmask_irq(1);
-  //pic_unmask_irq(8);
+  // pic_init();
+  // pic_unmask_irq(1);
+  // pic_unmask_irq(8);
 
   __asm__ volatile("lidt %0" : : "m"(idtr)); // load the new IDT
   __asm__ volatile("sti");                   // set the interrupt flag
@@ -60,11 +60,10 @@ void idt_init() {
   log("idt - initialized\n");
 }
 
-
 void idt_int_handler(registers_t *regs) {
   vmm_load_pagemap(vmm_kernel_pm);
-  //log("kernel - Interrupt %d\n", regs->int_no);
-  
+  // log("kernel - Interrupt %d\n", regs->int_no);
+
   if (regs->int_no < 32) {
     panic_ctx("A CPU exception occured.", regs);
   }
@@ -79,5 +78,5 @@ void idt_int_handler(registers_t *regs) {
   }
 
   lapic_eoi();
-  //pic_ack(regs->int_no - 32);
+  // pic_ack(regs->int_no - 32);
 }

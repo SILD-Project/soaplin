@@ -27,7 +27,7 @@ void lapic_calibrate_timer() {
   lapic_write(LAPIC_TIMER_DIV, 0);
   lapic_write(LAPIC_TIMER_LVT, (1 << 16) | 0xff);
   lapic_write(LAPIC_TIMER_INITCNT, 0xFFFFFFFF);
-  //pit_sleep(1); // 1 ms
+  // pit_sleep(1); // 1 ms
   lapic_write(LAPIC_TIMER_LVT, LAPIC_TIMER_DISABLE);
   uint32_t ticks = 0xFFFFFFFF - lapic_read(LAPIC_TIMER_CURCNT);
   apic_ticks = ticks;
@@ -35,16 +35,14 @@ void lapic_calibrate_timer() {
 }
 
 void lapic_write(uint32_t reg, uint32_t val) {
-  *((volatile uint32_t*)(HIGHER_HALF(0xfee00000) + reg)) = val;
+  *((volatile uint32_t *)(HIGHER_HALF(0xfee00000) + reg)) = val;
 }
 
 uint32_t lapic_read(uint32_t reg) {
-  return *((volatile uint32_t*)(HIGHER_HALF(0xfee00000) + reg));
+  return *((volatile uint32_t *)(HIGHER_HALF(0xfee00000) + reg));
 }
 
-void lapic_eoi() {
-  lapic_write((uint8_t)0xb0, 0x0);
-}
+void lapic_eoi() { lapic_write((uint8_t)0xb0, 0x0); }
 
 void lapic_ipi(uint32_t id, uint8_t dat) {
   lapic_write(LAPIC_ICRHI, id << LAPIC_ICDESTSHIFT);
@@ -59,6 +57,4 @@ void lapic_send_others_int(uint32_t id, uint32_t vec) {
   lapic_ipi(id, vec | LAPIC_ICRAES);
 }
 
-uint32_t lapic_get_id() {
-  return lapic_read(0x0020) >> LAPIC_ICDESTSHIFT;
-}
+uint32_t lapic_get_id() { return lapic_read(0x0020) >> LAPIC_ICDESTSHIFT; }

@@ -6,7 +6,7 @@ MAKEFLAGS += -rR
 ARCH := x86_64
 
 # Default user QEMU flags. These are appended to the QEMU command calls.
-QEMUFLAGS := -m 2G -debugcon stdio -no-reboot -no-shutdown
+QEMUFLAGS := -m 2G -debugcon stdio -no-reboot -no-shutdown 
 
 override IMAGE_NAME := sild-live-$(ARCH)
 

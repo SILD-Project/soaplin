@@ -1,3 +1,6 @@
+#include "arch/x86_64/pit.h"
+#include "arch/x86_64/smp.h"
+#include "arch/x86_64/sse.h"
 #include "dev/ioapic.h"
 #include "dev/lapic.h"
 #include "exec/elf.h"
@@ -9,25 +12,22 @@
 #include "sched/sched.h"
 #include "sys/acpi.h"
 #include "sys/acpi/madt.h"
-#include "arch//x86_64/pit.h"
-#include "arch//x86_64/smp.h"
-#include "arch//x86_64/sse.h"
 #include "sys/syscall.h"
+#include <arch/x86_64/fpu.h>
+#include <arch/x86_64/gdt.h>
+#include <arch/x86_64/idt.h>
 #include <font.h>
+#include <fs/vfs.h>
 #include <limine.h>
 #include <mm/memop.h>
 #include <stdbool.h>
 #include <stddef.h>
 #include <stdint.h>
-#include <arch//x86_64/fpu.h>
-#include <arch//x86_64/gdt.h>
-#include <arch//x86_64/idt.h>
 #include <sys/errhnd/panic.h>
 #include <sys/gfx/flanterm/backends/fb.h>
 #include <sys/gfx/flanterm/flanterm.h>
 #include <sys/log.h>
 #include <sys/printf.h>
-#include <fs/vfs.h>
 
 __attribute__((
     used, section(".limine_requests"))) static volatile LIMINE_BASE_REVISION(3);
@@ -79,7 +79,7 @@ void kmain(void) {
   idt_init();
   pmm_init();
   vmm_init();
-  
+
   kernel_vma_context = vma_create_context(vmm_kernel_pm);
   if (!kernel_vma_context) {
     log("kernel - vma ctx creation failed. halting\n");
@@ -87,7 +87,7 @@ void kmain(void) {
     while (1)
       asm("hlt");
   }
-  
+
   acpi_init();
   madt_init();
   ioapic_init();
@@ -97,21 +97,20 @@ void kmain(void) {
 
   syscall_init();
   sched_init();
-  
-  //vfs_init();
 
+  // vfs_init();
 
-
-  //panic("No working initialization program found. (This is normal due to "
-  //      "Soaplin's current state, so please do not report this as a bug)");
+  // panic("No working initialization program found. (This is normal due to "
+  //       "Soaplin's current state, so please do not report this as a bug)");
 
   program_t *p = elf_load(module_request.response->modules[0]->address, 1);
 
-  sched_process *proc = sched_create("Test", p->entry, p->pm,
-                                      SCHED_USER_PROCESS);
+  sched_process *proc =
+      sched_create("Test", p->entry, p->pm, SCHED_USER_PROCESS);
 
   log("kernel - Soaplin initialized sucessfully.\n");
 
+  pit_enable();
   while (1)
     ;
   ;

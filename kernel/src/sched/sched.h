@@ -1,7 +1,7 @@
 #pragma once
 
-#include "mm/vmm.h"
 #include "arch/x86_64/idt.h"
+#include "mm/vmm.h"
 
 #define SCHED_KERNEL_PROCESS 0 // A process that runs in kernel mode.
 #define SCHED_USER_PROCESS                                                     \

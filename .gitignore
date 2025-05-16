@@ -5,3 +5,4 @@
 *.iso
 *.hdd
 /compile_commands.json
+/.idea

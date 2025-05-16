@@ -52,7 +52,7 @@ void syscall_register(int id, syscall handler) {
 
 extern void syscall_exit(int exit_code);
 
-void syscall_init() { 
+void syscall_init() {
   for (int i = 0; i < 1024; i++)
     syscall_table[i] = (syscall)__syscall_undefined;
 
