@@ -4,6 +4,7 @@
 #include "mm/memop.h"
 #include "mm/pmm.h"
 #include "mm/vmm.h"
+#include "sys/errhnd/panic.h"
 #include "sys/log.h"
 #include <lib/string.h>
 #include <mm/liballoc/liballoc.h>
@@ -28,6 +29,18 @@ void map_range_to_pagemap(pagemap_t *dest_pagemap, pagemap_t *src_pagemap,
   }
 }
 
+static void __sched_enter_standby() {
+  standby = 1;
+  log("sched - As there's nothing "
+      "to schedule, the scheduler entered standby"
+      "mode.\n");
+}
+
+static void __sched_exit_standby() {
+  standby = 0;
+  log("sched - The scheduler exited standby mode.\n");
+}
+
 void sched_init() {
   // TODO: It may be good to implement heap memory to save space.
 
@@ -41,11 +54,7 @@ void sched_init() {
   proc_list->pm = vmm_kernel_pm;
 
   curr_proc = proc_list;
-
-  standby = 1;
-  log("sched - As there's nothing "
-      "to schedule, the scheduler entered standby"
-      "mode.\n");
+  __sched_enter_standby();
 }
 
 sched_process *sched_create(char *name, uint64_t entry_point, pagemap_t *pm,
@@ -107,11 +116,7 @@ sched_process *sched_create(char *name, uint64_t entry_point, pagemap_t *pm,
                          VMM_PRESENT | VMM_WRITABLE);
 
   if (standby) {
-    // Disable standby mode as there's actually something to
-    // run, now.
-    standby = 0;
-    log("sched - Standby mode has been"
-        "disabled.\n");
+    __sched_exit_standby();
   }
 
   log("sched - created process '%s' (pid: %d, rip: %p)\n", proc->name,
@@ -124,7 +129,7 @@ sched_process *sched_from_program(program_t *prog) {
   return sched_create("unknown program", prog->entry, prog->pm, SCHED_USER_PROCESS);
 }
 void sched_exit(int exit_code) {
-  log("sched - Process %d exited with code %d!", curr_proc->pid, exit_code);
+  log("sched - Process %d exited with code %d!\n", curr_proc->pid, exit_code);
   curr_proc->type = SCHED_DIED;
   schedule(&curr_proc->regs);
 }
@@ -135,30 +140,63 @@ void schedule(registers_t *regs) {
     return;
   }
 
-  memcpy(&curr_proc->regs, regs, sizeof(registers_t));
+  if (curr_proc->type != SCHED_DIED) {
+    memcpy(&curr_proc->regs, regs, sizeof(registers_t));
+  }
 
   if (curr_proc->type == SCHED_DIED) {
     sched_process *prev_proc = proc_list;
+    sched_process *next = curr_proc->next;
+    if (next == NULL) {
+      next = proc_list;
+    }
+
+    if (proc_list == curr_proc) {
+      goto kill_process;
+    }
+
     while (prev_proc->next != curr_proc) {
       prev_proc = prev_proc->next;
     }
 
-    prev_proc->next = curr_proc->next;
+kill_process:
+    if (next == NULL) {
+      next = proc_list;
+    }
+
+    if (proc_list == curr_proc) {
+      vmm_release_pm(curr_proc->pm);
+      pmm_free_page(curr_proc->stack_base_physical);
+      free(curr_proc);
+      
+      __sched_enter_standby();
+      return;
+    }
+
+    prev_proc->next = next;
 
     vmm_release_pm(curr_proc->pm);
     pmm_free_page(curr_proc->stack_base_physical);
+    free(curr_proc);
 
-    // R.I.P. process
-    pmm_free_page(curr_proc);
-
-    return;
+    curr_proc = next;
+  } else {
+    curr_proc = curr_proc->next;
+    if (curr_proc == NULL)
+      curr_proc = proc_list;
   }
 
-  curr_proc = curr_proc->next;
-  if (curr_proc == NULL)
-    curr_proc = proc_list;
-
-  memcpy(regs, &curr_proc->regs, sizeof(registers_t));
+  if (curr_proc->type == SCHED_RUNNING) {
+    memcpy(regs, &curr_proc->regs, sizeof(registers_t));
+  } else if (curr_proc->type == SCHED_EMPTY) {
+    memset(regs, 0, sizeof(registers_t));
+    regs->cs = 0x28;
+    regs->ss = 0x30;
+    regs->rflags = 0x202;
+    regs->rip = 0;
+  } else {
+    panic("sched - Tried to schedule a dead process.\n");
+  }
 
   wrmsr(IA32_GS_KERNEL_MSR, (uint64_t)curr_proc);
   // log("sched - proc %d\n", curr_proc->pid);

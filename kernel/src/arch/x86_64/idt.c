@@ -7,6 +7,7 @@
 #include <arch/x86_64/idt.h>
 #include <stdbool.h>
 #include <sys/log.h>
+#include <sched/sched.h>
 
 __attribute__((aligned(0x10))) static idt_entry_t idt[256];
 
@@ -65,6 +66,17 @@ void idt_int_handler(registers_t *regs) {
   // log("kernel - Interrupt %d\n", regs->int_no);
 
   if (regs->int_no < 32) {
+    if (regs->cs == 0x43) {
+      log("ints - Process \"%s\" (pid: %d) caused a CPU fault: %d (err: %d, IP: %p)\n",
+          curr_proc->name, curr_proc->pid, regs->int_no, regs->err_code, regs->rip);
+      
+      sched_exit(-144);
+      return;
+      //asm("cli");
+      //while (1)
+      //  asm("hlt");
+    }
+
     panic_ctx("A CPU exception occured.", regs);
   }
 

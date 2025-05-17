@@ -8,6 +8,7 @@ _start:
     mov rdi, 1      ; stdout file descriptor
     mov rsi, msg    ; pointer to message
     mov rdx, msg_len ; message length
+    hlt
     syscall
 
 .loop:
