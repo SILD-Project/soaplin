@@ -9,9 +9,12 @@ The Soaplin kernel is a new Unix-like operating system kernel.
 * ELF loader
 * ACPI
 * Symetric Multiprocessing (It runs code, but the scheduler is running on 1 processor.)
+* Recovers from a faulty userspace process.
+
+## Nearly done
+* Virtual File System
 
 ## In the works
-* Virtual File System
 * FPU support
 
 ## To come
@@ -20,9 +23,6 @@ The Soaplin kernel is a new Unix-like operating system kernel.
 * FAT32 driver
 * TAR-based init ram disk
 * Video driver for Bochs graphics adapter, and the VMware display adapter.
-
-## Known bugs
-* If a user process calls the syscall handler by using interrupts, the system may crash due to a Page Fault.
 
 ## Building
 To build Soaplin, you must ensure you have these:

@@ -57,6 +57,11 @@ SECTIONS
     .data : {
         data_start_ld = .;
         *(.data .data.*)
+        
+        /* Exported kernel symbols */
+        __start_ksyms = .;
+        KEEP(*(.ksyms))
+        __stop_ksyms = .;
     } :data
 
     /* NOTE: .bss needs to be the last thing mapped to :data, otherwise lots of */
