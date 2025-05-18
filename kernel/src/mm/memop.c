@@ -1,18 +1,14 @@
+/*
+ *  The Soaplin Kernel
+ *  Copyright (C) 2025 The SILD Project
+ *
+ *  memop.c - Memory operations implementation.
+ */
+
 #include <mm/memop.h>
 #include <stdint.h>
 
 void *memcpy(void *restrict dest, const void *restrict src, size_t n) {
-#if defined(__x86_64__)
-    long d0, d1, d2; 
-    asm volatile(
-            "rep ; movsq\n\t movq %4,%%rcx\n\t""rep ; movsb\n\t": "=&c" (d0),
-            "=&D" (d1),
-            "=&S" (d2): "0" (n >> 3), 
-            "g" (n & 7), 
-            "1" (dest),
-            "2" (src): "memory"
-    );  
-#else
     uint8_t *restrict pdest = (uint8_t *restrict)dest;
     const uint8_t *restrict psrc = (const uint8_t *restrict)src;
 
@@ -21,7 +17,6 @@ void *memcpy(void *restrict dest, const void *restrict src, size_t n) {
     }
 
     return dest;
-#endif
 }
 
 void *memset(void *s, int c, size_t n) {

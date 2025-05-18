@@ -1,7 +1,15 @@
+/*
+ *  The Soaplin Kernel
+ *  Copyright (C) 2025 The SILD Project
+ *
+ *  tty.c - Terminal interface implementation.
+ */
 
-#include <boot/limine.h>
+#include <stdarg.h>
 #include <deps/flanterm/backends/fb.h>
 #include <deps/flanterm/flanterm.h>
+#include <boot/limine.h>
+#include <deps/npf.h>
 #include <lib/string.h>
 
 struct flanterm_context *tty0_ctx; 
@@ -26,6 +34,20 @@ void tty_init() {
     );
 }
 
-void tty_write_raw(char *str) {
+void tty_putc(char c) {
+    flanterm_write(tty0_ctx, &c, 1);
+}
+
+void tty_puts(char *str) {
     flanterm_write(tty0_ctx, str, strlen(str));
+}
+
+void tty_printf(char *fmt, ...) {
+    char buf[2048];
+    va_list l;
+    va_start(l, fmt);
+    npf_vsnprintf(buf, 2048, fmt, l);
+    va_end(l);
+
+    tty_puts(buf);
 }

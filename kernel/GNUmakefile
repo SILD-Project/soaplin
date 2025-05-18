@@ -57,6 +57,13 @@ override CFLAGS += \
     -ffunction-sections \
     -fdata-sections
 
+ifeq ($(CC_IS_CLANG), 1)
+    # Force Clang to use it's own linker instead of the host's one, since it
+    # might be used for cross-compilation.
+    override LDFLAGS += \
+        -fuse-ld=lld
+endif
+
 # Internal C preprocessor flags that should not be changed by the user.
 override CPPFLAGS := \
     -I src \
@@ -65,12 +72,6 @@ override CPPFLAGS := \
     -DLIMINE_API_REVISION=3 \
     -MMD \
     -MP
-
-ifeq ($(ARCH),x86_64)
-    # Internal nasm flags that should not be changed by the user.
-    override NASMFLAGS += \
-        -Wall
-endif
 
 # Architecture specific internal flags.
 ifeq ($(ARCH),x86_64)

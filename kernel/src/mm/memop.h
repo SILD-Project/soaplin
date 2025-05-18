@@ -1,3 +1,10 @@
+/*
+ *  The Soaplin Kernel
+ *  Copyright (C) 2025 The SILD Project
+ *
+ *  memop.h - Memory operations declarations.
+ */
+
 #pragma once
 
 #include <stddef.h>
