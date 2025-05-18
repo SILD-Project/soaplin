@@ -21,10 +21,13 @@ static pmm_region_t *pmm_region_list_head = NULL;
 static pmm_page_t *pmm_free_list_head = NULL;
 
 void pmm_free_page(void *mem) {
-    pmm_page_t *page = (pmm_page_t*)mem;
-    pmm_page_t *page_hhalf = (pmm_page_t*)higher_half((uint64_t)page);
-    page_hhalf->next = (pmm_page_t*)higher_half((uint64_t)pmm_free_list_head);
-    pmm_free_list_head = page_hhalf;
+    if (!mem)
+        return;
+
+    pmm_page_t *page = (pmm_page_t*)higher_half((uint64_t)mem);
+    page->next = pmm_free_list_head ? (pmm_page_t*)higher_half((uint64_t)pmm_free_list_head) : 0x0;
+    pmm_free_list_head = page;
+    //trace("pmm: free: page free list head is now %p\n", page);
 
     pmm_available_pages++;
 }
@@ -35,6 +38,7 @@ static void __pmm_steal_pages_from_region_head(int pages) {
         void *page = (void*)pmm_region_list_head->base +
                             pmm_region_list_head->length;
         pmm_free_page(page);
+        //trace("pmm: stealer: page is %p\n", page);
 
         if (pmm_region_list_head->length == 0)
         {
@@ -63,11 +67,12 @@ void *pmm_alloc_page() {
     pmm_available_pages--;
 
     pmm_page_t *page = pmm_free_list_head;
-    pmm_page_t *page_hhalf = (pmm_page_t*)higher_half((uint64_t)page);
-    pmm_free_list_head = page_hhalf->next;
+    trace("pmm: alloc: page is %p\n", page);
+    pmm_free_list_head = page->next;
+    //trace("pmm: alloc: free page list head is now %p\n", page);
 
-    //memset(page_hhalf, 0, PMM_PAGE_SIZE);
-    return page;
+    memset(page, 0, PMM_PAGE_SIZE);
+    return (void*)physical((uint64_t)page);
 }
 
 void pmm_init() {

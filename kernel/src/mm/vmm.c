@@ -96,6 +96,7 @@ void vmm_free_pm(pagemap_t pm) {
 
 static uint64_t *__vmm_get_next_lvl(uint64_t *level, uint64_t entry,
                                     uint64_t flags, bool alloc) {
+  //trace("level: %p, level[entry]: %p\n", level, level + entry);
   if (level[entry] & PTE_PRESENT)
     return (uint64_t *)higher_half(PTE_GET_ADDR(level[entry]));
   if (alloc) {
@@ -110,6 +111,7 @@ static uint64_t *__vmm_get_next_lvl(uint64_t *level, uint64_t entry,
 void vmm_map(pagemap_t pm, uint64_t vaddr, uint64_t paddr, uint64_t flags) {
   if (!pm) return;
 
+  //trace("pm: %p, vaddr: %p, paddr: %p\n", pm, vaddr, paddr);
   uint64_t pml4_entry = (vaddr >> 39) & 0x1ff;
   uint64_t pml3_entry = (vaddr >> 30) & 0x1ff;
   uint64_t pml2_entry = (vaddr >> 21) & 0x1ff;
