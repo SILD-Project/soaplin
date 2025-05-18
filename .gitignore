@@ -4,5 +4,4 @@
 /.cache
 *.iso
 *.hdd
-/compile_commands.json
-/.idea
+compile_commands.json

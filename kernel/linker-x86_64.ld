@@ -23,45 +23,32 @@ SECTIONS
     /* that is the beginning of the region. */
     . = 0xffffffff80000000;
 
-
-    .text : {
-        text_start_ld = .;
-        *(.text .text.*)
-        text_end_ld = .;
-    } :text
-
-    /* Move to the next memory page for .limine_requests */
-    . = ALIGN(CONSTANT(MAXPAGESIZE));
-
     /* Define a section to contain the Limine requests and assign it to its own PHDR */
     .limine_requests : {
-        reqs_start_ld = .;
         KEEP(*(.limine_requests_start))
         KEEP(*(.limine_requests))
         KEEP(*(.limine_requests_end))
-        reqs_end_ld = .;
     } :limine_requests
+
+    /* Move to the next memory page for .text */
+    . = ALIGN(CONSTANT(MAXPAGESIZE));
+
+    .text : {
+        *(.text .text.*)
+    } :text
 
     /* Move to the next memory page for .rodata */
     . = ALIGN(CONSTANT(MAXPAGESIZE));
 
     .rodata : {
-        rodata_start_ld = .;
         *(.rodata .rodata.*)
-        rodata_end_ld = .;
     } :rodata
 
     /* Move to the next memory page for .data */
     . = ALIGN(CONSTANT(MAXPAGESIZE));
 
     .data : {
-        data_start_ld = .;
         *(.data .data.*)
-        
-        /* Exported kernel symbols */
-        __start_ksyms = .;
-        KEEP(*(.ksyms))
-        __stop_ksyms = .;
     } :data
 
     /* NOTE: .bss needs to be the last thing mapped to :data, otherwise lots of */
@@ -71,7 +58,6 @@ SECTIONS
     .bss : {
         *(.bss .bss.*)
         *(COMMON)
-        data_end_ld = .;
     } :data
 
     /* Discard .note.* and .eh_frame* since they may cause issues on some hosts. */

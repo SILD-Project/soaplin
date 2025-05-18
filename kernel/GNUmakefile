@@ -4,7 +4,7 @@ MAKEFLAGS += -rR
 
 # This is the name that our final executable will have.
 # Change as needed.
-override OUTPUT := soaplin
+override OUTPUT := kernel
 
 # Target architecture to build for. Default to x86_64.
 ARCH := x86_64
@@ -19,9 +19,6 @@ endif
 
 # User controllable C compiler command.
 CC := cc
-
-# User controllable archiver command.
-AR := ar
 
 # User controllable C flags.
 CFLAGS := -g -O2 -pipe
@@ -39,7 +36,7 @@ LDFLAGS :=
 
 # Ensure the dependencies have been obtained.
 ifneq ($(shell ( test '$(MAKECMDGOALS)' = clean || test '$(MAKECMDGOALS)' = distclean ); echo $$?),0)
-    ifeq ($(shell ( ! test -d freestnd-c-hdrs || ! test -d cc-runtime || ! test -f src/limine.h ); echo $$?),0)
+    ifeq ($(shell ( ! test -d src/deps/freestnd-c-hdrs || ! test -f src/deps/cc-runtime.c || ! test -f src/deps/limine.h || ! test -d src/deps/flanterm ); echo $$?),0)
         $(error Please run the ./get-deps script first)
     endif
 endif
@@ -58,14 +55,12 @@ override CFLAGS += \
     -fno-stack-check \
     -fno-PIC \
     -ffunction-sections \
-    -fdata-sections \
-    -fno-omit-frame-pointer \
-    -fno-optimize-sibling-calls
+    -fdata-sections
 
 # Internal C preprocessor flags that should not be changed by the user.
 override CPPFLAGS := \
     -I src \
-    -isystem freestnd-c-hdrs \
+    -isystem src/deps/freestnd-c-hdrs \
     $(CPPFLAGS) \
     -DLIMINE_API_REVISION=3 \
     -MMD \
@@ -167,62 +162,52 @@ all: bin-$(ARCH)/$(OUTPUT)
 # Include header dependencies.
 -include $(HEADER_DEPS)
 
-# Link rules for building the C compiler runtime.
-cc-runtime-$(ARCH)/cc-runtime.a: GNUmakefile cc-runtime/*
-	@rm -rf cc-runtime-$(ARCH)
-	@cp -r cc-runtime cc-runtime-$(ARCH)
-	@$(MAKE) -C cc-runtime-$(ARCH) -f cc-runtime.mk \
-		CC="$(CC)" \
-		AR="$(AR)" \
-		CFLAGS="$(CFLAGS)" \
-		CPPFLAGS='-isystem ../freestnd-c-hdrs -DCC_RUNTIME_NO_FLOAT'
-	@echo "  C runtime built"
-
 # Link rules for the final executable.
-bin-$(ARCH)/$(OUTPUT): GNUmakefile linker-$(ARCH).ld $(OBJ) cc-runtime-$(ARCH)/cc-runtime.a
-	@mkdir -p "$$(dirname $@)"
+bin-$(ARCH)/$(OUTPUT): GNUmakefile linker-$(ARCH).ld $(OBJ)
 	@echo "  LD  $@"
-	@$(CC) $(CFLAGS) $(LDFLAGS) $(OBJ) cc-runtime-$(ARCH)/cc-runtime.a -o $@
+	@mkdir -p "$$(dirname $@)"
+	@$(CC) $(CFLAGS) $(LDFLAGS) $(OBJ) -o $@
 
 # Compilation rules for *.c files.
 obj-$(ARCH)/%.c.o: src/%.c GNUmakefile
-	@mkdir -p "$$(dirname $@)"
 	@echo "  CC  $@"
+	@mkdir -p "$$(dirname $@)"
 	@$(CC) $(CFLAGS) $(CPPFLAGS) -c $< -o $@
 
 # Compilation rules for *.S files.
 obj-$(ARCH)/%.S.o: src/%.S GNUmakefile
+	@echo "  CC  $@"
 	@mkdir -p "$$(dirname $@)"
-	@echo "  AS  $@"
 	@$(CC) $(CFLAGS) $(CPPFLAGS) -c $< -o $@
 
 ifeq ($(ARCH),x86_64)
 # Compilation rules for *.asm (nasm) files.
 obj-$(ARCH)/%.asm.o: src/%.asm GNUmakefile
+	@echo "  NASM  $@"
 	@mkdir -p "$$(dirname $@)"
-	@echo "  NASM $@"
 	@nasm $(NASMFLAGS) $< -o $@
 endif
 
 # Remove object files and the final executable.
 .PHONY: clean
 clean:
-	@rm -rf bin-$(ARCH) obj-$(ARCH) cc-runtime-$(ARCH)
-	@echo "  The kernel output files have been removed."
+	@rm -rf bin-$(ARCH) obj-$(ARCH)
+
 # Remove everything built and generated including downloaded dependencies.
 .PHONY: distclean
 distclean:
-	@rm -rf bin-* obj-* freestnd-c-hdrs cc-runtime* src/limine.h
-	@echo "  The kernel output & downloaded files have been removed."
+	@rm -rf bin-* obj-* src/deps
 
 # Install the final built executable to its final on-root location.
 .PHONY: install
 install: all
 	@install -d "$(DESTDIR)$(PREFIX)/share/$(OUTPUT)"
 	@install -m 644 bin-$(ARCH)/$(OUTPUT) "$(DESTDIR)$(PREFIX)/share/$(OUTPUT)/$(OUTPUT)-$(ARCH)"
+	@echo "A new copy of Soaplin has been installed to $(DESTDIR)$(PREFIX)/share/$(OUTPUT)."
 
 # Try to undo whatever the "install" target did.
 .PHONY: uninstall
 uninstall:
 	@rm -f "$(DESTDIR)$(PREFIX)/share/$(OUTPUT)/$(OUTPUT)-$(ARCH)"
 	@-rmdir "$(DESTDIR)$(PREFIX)/share/$(OUTPUT)"
+	@echo "The copy of Soaplin at $(DESTDIR)$(PREFIX)/share/$(OUTPUT) has been deleted."
