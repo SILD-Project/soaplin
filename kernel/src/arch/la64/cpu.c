@@ -12,6 +12,14 @@
 void arch_init_stage1() {
 }
 
+void cpu_load_pm(pagemap_t pm) {
+    
+}
+
+void cpu_invalidate_page(pagemap_t pm, uint64_t vaddr) {
+    
+}
+
 void hcf() {
     for (;;) {
         asm ("idle 0");

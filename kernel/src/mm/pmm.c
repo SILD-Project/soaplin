@@ -23,27 +23,29 @@ static pmm_page_t *pmm_free_list_head = NULL;
 void pmm_free_page(void *mem) {
     pmm_page_t *page = (pmm_page_t*)mem;
     pmm_page_t *page_hhalf = (pmm_page_t*)higher_half((uint64_t)page);
-    page_hhalf->next = pmm_free_list_head;
-    pmm_free_list_head = page;
+    page_hhalf->next = (pmm_page_t*)higher_half((uint64_t)pmm_free_list_head);
+    pmm_free_list_head = page_hhalf;
 
     pmm_available_pages++;
 }
 
 static void __pmm_steal_pages_from_region_head(int pages) {
-    pmm_region_list_head->length -= PMM_PAGE_SIZE;
-    void *page = (void*)pmm_region_list_head->base +
-                        pmm_region_list_head->length;
-    pmm_free_page(page);
+    for (int i = 0; i < pages; i++) {
+        pmm_region_list_head->length -= PMM_PAGE_SIZE;
+        void *page = (void*)pmm_region_list_head->base +
+                            pmm_region_list_head->length;
+        pmm_free_page(page);
 
-    if (pmm_region_list_head->length == 0)
-    {
-        // If a region is totally consumed,
-        // we can turn it into a free page :)
-        // So our 4kb aren't really lost
-        void *mem = (void*)pmm_region_list_head;
-        pmm_region_list_head = pmm_region_list_head->next;
-        
-        pmm_free_page(mem);
+        if (pmm_region_list_head->length == 0)
+        {
+            // If a region is totally consumed,
+            // we can turn it into a free page :)
+            // So our 4kb aren't really lost
+            void *mem = (void*)pmm_region_list_head;
+            pmm_region_list_head = pmm_region_list_head->next;
+            
+            pmm_free_page(mem);
+        }
     }
 }
 

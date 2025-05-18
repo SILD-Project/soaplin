@@ -32,3 +32,5 @@ limine_bootinfo_t *limine_get_bootinfo();
 struct limine_memmap_response *limine_get_memmap();
 
 uint64_t limine_get_hhdm_offset();
+uint64_t limine_get_kernel_vaddr();
+uint64_t limine_get_kernel_paddr();
