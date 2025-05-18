@@ -38,6 +38,12 @@ static volatile struct limine_memmap_request memmap_req = {
     .revision = 0
 };
 
+__attribute__((used, section(".limine_requests")))
+static volatile struct limine_hhdm_request hhdm_req = {
+    .id = LIMINE_HHDM_REQUEST,
+    .revision = 0
+};
+
 __attribute__((used, section(".limine_requests_start")))
 static volatile LIMINE_REQUESTS_START_MARKER;
 
@@ -79,4 +85,9 @@ limine_bootinfo_t *limine_get_bootinfo() {
 #endif
 
     return &__limine_bootinfo;
+}
+
+uint64_t limine_get_hhdm_offset()
+{
+    return hhdm_req.response->offset;
 }
