@@ -27,7 +27,6 @@ void pmm_free_page(void *mem) {
     pmm_page_t *page = (pmm_page_t*)higher_half((uint64_t)mem);
     page->next = pmm_free_list_head ? (pmm_page_t*)higher_half((uint64_t)pmm_free_list_head) : 0x0;
     pmm_free_list_head = page;
-    //trace("pmm: free: page free list head is now %p\n", page);
 
     pmm_available_pages++;
 }
@@ -67,9 +66,7 @@ void *pmm_alloc_page() {
     pmm_available_pages--;
 
     pmm_page_t *page = pmm_free_list_head;
-    trace("pmm: alloc: page is %p\n", page);
     pmm_free_list_head = page->next;
-    //trace("pmm: alloc: free page list head is now %p\n", page);
 
     memset(page, 0, PMM_PAGE_SIZE);
     return (void*)physical((uint64_t)page);

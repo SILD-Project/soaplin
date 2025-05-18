@@ -14,6 +14,54 @@ __attribute__((aligned(0x10)))
 static idt_entry_t idt[256];
 static idtr_t idtr;
 
+static void __panic_display_bt(registers_t *regs) {
+  if (regs->cs == 0x43 || regs->cs == 0x3B) {
+    fatal("The backtrace can't be dumped from a userspace process.\n");
+    return;  // Don't try to backtrace userspace
+  }
+
+  fatal("-- BACKTRACE --\n");
+
+  // First print the current instruction pointer from the interrupt frame
+  if (regs->rip) {
+    fatal("* %p (current)\n", regs->rip);
+  }
+
+  uint64_t *frame = (uint64_t*)regs->rbp;
+  if (!frame || (uint64_t)frame < 0xffffffff80000000) {
+    fatal("No further stack frames available\n");
+    return;
+  }
+
+  // Frame format in x86_64:
+  // [rbp] -> previous rbp
+  // [rbp+8] -> return address
+  int depth = 0;
+  while (frame && depth < 16) {  // Limit depth to avoid infinite loops
+    // Validate both frame and return address pointers
+    uint64_t *ret_addr_ptr = frame + 1;
+    if ((uint64_t)ret_addr_ptr < 0xffffffff80000000) {
+      break;
+    }
+
+    uint64_t ret_addr = *ret_addr_ptr;
+    if (ret_addr < 0xffffffff80000000 || ret_addr > 0xfffffffffffff000) {
+      break;
+    }
+
+    fatal("* %p\n", ret_addr);
+
+    uint64_t next_rbp = *frame;
+    if (next_rbp < 0xffffffff80000000 || next_rbp > 0xfffffffffffff000) {
+      break;
+    }
+    
+    frame = (uint64_t*)next_rbp;
+    depth++;
+  }
+  fatal("\n");
+}
+
 void idt_interrupt_handler(registers_t *regs) {
     fatal("Kernel panic: CPU exception %d\n", regs->int_no);
     fatal("rax: %p, rbx: %p, rbp: %p, rdx\n", regs->rax, regs->rbx, regs->rbp, regs->rdx);
@@ -23,6 +71,7 @@ void idt_interrupt_handler(registers_t *regs) {
     fatal("r14: %p, r15: %p\n", regs->r14, regs->r15);
     fatal("rip: %p, cs: %p, ss: %p\n", regs->rip, regs->cs, regs->ss);
     fatal("rflags: %p, err: %p, rsp: %p\n", regs->rflags, regs->err_code, regs->rsp);
+    __panic_display_bt(regs);
     hcf();
 }
 

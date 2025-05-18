@@ -21,23 +21,11 @@
 
 typedef uint64_t *pagemap_t;
 
-// These are defined in the linker file.
-extern char reqs_start_ld;
-extern char reqs_end_ld;
-
-extern char text_start_ld;
-extern char text_end_ld;
-
-extern char rodata_start_ld;
-extern char rodata_end_ld;
-
-extern char data_start_ld;
-extern char data_end_ld;
-
 void vmm_init();
 pagemap_t vmm_alloc_pm();
 void vmm_free_pm(pagemap_t pm);
 
+void vmm_load_pm(pagemap_t pm);
 void vmm_map(pagemap_t pm, uint64_t vaddr, uint64_t paddr, uint64_t flags);
 void vmm_map_user(pagemap_t pm, uint64_t vaddr, uint64_t paddr,
                   uint64_t flags);

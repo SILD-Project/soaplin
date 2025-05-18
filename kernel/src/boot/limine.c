@@ -5,11 +5,11 @@
  *  limine.c - Limine bootloader interface implementation.
  */
 
-#include "deps/limine.h"
-#include "limine.h"
 #include <stdbool.h>
 #include <stddef.h>
 #include <boot/limine.h>
+#include <deps/limine.h>
+#include <exec/elf.h>
 
 __attribute__((used, section(".limine_requests")))
 static volatile LIMINE_BASE_REVISION(3);
@@ -47,6 +47,19 @@ static volatile struct limine_hhdm_request hhdm_req = {
 __attribute__((used, section(".limine_requests")))
 static volatile struct limine_executable_address_request kaddr_req = {
     .id = LIMINE_EXECUTABLE_ADDRESS_REQUEST,
+    .revision = 0
+};
+
+__attribute__((used, section(".limine_requests")))
+static volatile struct limine_executable_file_request execfile_req = {
+    .id = LIMINE_EXECUTABLE_FILE_REQUEST,
+    .revision = 0
+};
+
+__attribute__((used, section(".limine_requests")))
+static volatile struct limine_paging_mode_request pgmode_req = {
+    .id = LIMINE_PAGING_MODE_REQUEST,
+    .mode = LIMINE_PAGING_MODE_X86_64_4LVL,
     .revision = 0
 };
 
@@ -96,3 +109,4 @@ limine_bootinfo_t *limine_get_bootinfo() {
 uint64_t limine_get_hhdm_offset() { return hhdm_req.response->offset; }
 uint64_t limine_get_kernel_vaddr() { return kaddr_req.response->virtual_base; }
 uint64_t limine_get_kernel_paddr() { return kaddr_req.response->physical_base; }
+uint64_t limine_get_kernel_ehdr_addr() { return (uint64_t)execfile_req.response->executable_file->address; }

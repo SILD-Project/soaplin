@@ -5,12 +5,13 @@
  *  vmm.c - Virtual memory manager
  */
 
-#include "boot/limine.h"
-#include "lib/log.h"
 #include <stdbool.h>
 #include <stddef.h>
 
 #include <arch/cpu.h>
+#include <boot/limine.h>
+#include <exec/elf.h>
+#include <lib/log.h>
 #include <mm/memop.h>
 #include <mm/pmm.h>
 #include <mm/vmm.h>
@@ -31,36 +32,37 @@ void vmm_init() {
 
     uint64_t kvaddr = limine_get_kernel_vaddr();
     uint64_t kpaddr = limine_get_kernel_paddr();
-    uint64_t reqs_start = ALIGN_DOWN((uint64_t)reqs_start_ld, PMM_PAGE_SIZE);
-    uint64_t reqs_end = ALIGN_UP((uint64_t)reqs_end_ld, PMM_PAGE_SIZE);
-    uint64_t text_start = ALIGN_DOWN((uint64_t)text_start_ld, PMM_PAGE_SIZE);
-    uint64_t text_end = ALIGN_UP((uint64_t)text_end_ld, PMM_PAGE_SIZE);
-    uint64_t rodata_start = ALIGN_DOWN((uint64_t)rodata_start_ld, PMM_PAGE_SIZE);
-    uint64_t rodata_end = ALIGN_UP((uint64_t)rodata_end_ld, PMM_PAGE_SIZE);
-    uint64_t data_start = ALIGN_DOWN((uint64_t)data_start_ld, PMM_PAGE_SIZE);
-    uint64_t data_end = ALIGN_UP((uint64_t)data_end_ld, PMM_PAGE_SIZE);
+    
+    char *elf_addr = (char *)limine_get_kernel_ehdr_addr();
+    Elf64_Ehdr *ehdr = (Elf64_Ehdr *)elf_addr;
 
-    // Now, map the kernel's sections
-    for (uint64_t i = reqs_start; i < reqs_end; i += PMM_PAGE_SIZE)
-        vmm_map(vmm_kernel_pm, i, i - kvaddr + kpaddr, PTE_PRESENT | PTE_WRITE); // why would i write into Limine requests?
-    trace("vmm: Mapped limine rqs: PW\n");
-    for (uint64_t i = text_start; i < text_end; i += PMM_PAGE_SIZE)
-        vmm_map(vmm_kernel_pm, i, i - kvaddr + kpaddr, PTE_PRESENT);
-    trace("vmm: Mapped text: P\n");
-    for (uint64_t i = rodata_start; i < rodata_end; i += PMM_PAGE_SIZE)
-        vmm_map(vmm_kernel_pm, i, i - kvaddr + kpaddr, PTE_PRESENT | PTE_NX);
-    trace("vmm: Mapped rodata: P NX\n");
-    for (uint64_t i = data_start; i < data_end; i += PMM_PAGE_SIZE)
-        vmm_map(vmm_kernel_pm, i, i - kvaddr + kpaddr, PTE_PRESENT | PTE_WRITE | PTE_NX);
-    trace("vmm: Mapped data: PW NX\n");
+    for (uint16_t i = 0; i < ehdr->e_phnum; i++) {
+        Elf64_Phdr *cur_phdr = (Elf64_Phdr*)(elf_addr + ehdr->e_phoff + (i * ehdr->e_phentsize));
+        if (cur_phdr->p_type != PT_LOAD)
+            continue;
 
-    // Map the lower 4 GiB into the higher-half
+        uintptr_t phys = (cur_phdr->p_vaddr - kvaddr) + kpaddr;
+        uint64_t flags = PTE_PRESENT;
+        if ((cur_phdr->p_flags & PF_X) == 0) {
+            flags |= PTE_NX;
+        }
+        if (cur_phdr->p_flags & PF_W) {
+            flags |= PTE_WRITE;
+        }
+
+        size_t length = ALIGN_UP(cur_phdr->p_memsz, PMM_PAGE_SIZE);
+        
+        for (uint64_t i = 0; i < length; i += PMM_PAGE_SIZE) {
+            vmm_map(vmm_kernel_pm, cur_phdr->p_vaddr + i, phys + i, flags);
+        }
+        trace("vmm: Mapped range: %p -> %p (length: %x)\n", phys, cur_phdr->p_vaddr, length);
+    }
+
     for (uint64_t i = 0; i < 0x100000000; i += PMM_PAGE_SIZE)
         vmm_map(vmm_kernel_pm, higher_half(i), i, PTE_PRESENT | PTE_WRITE);
-    trace("vmm: Mapped lower 4gib to higher half with flags: PW\n");
+    trace("vmm: Mapped range: %p -> %p (length: %x)\n", 0x0, 0xFFFF800000000000, 0x100000000);
 
-    cpu_load_pm(vmm_kernel_pm);
-
+    vmm_load_pm(vmm_kernel_pm);
     trace("vmm: Initialized.\n");
 }
 
@@ -96,7 +98,6 @@ void vmm_free_pm(pagemap_t pm) {
 
 static uint64_t *__vmm_get_next_lvl(uint64_t *level, uint64_t entry,
                                     uint64_t flags, bool alloc) {
-  //trace("level: %p, level[entry]: %p\n", level, level + entry);
   if (level[entry] & PTE_PRESENT)
     return (uint64_t *)higher_half(PTE_GET_ADDR(level[entry]));
   if (alloc) {
@@ -111,7 +112,6 @@ static uint64_t *__vmm_get_next_lvl(uint64_t *level, uint64_t entry,
 void vmm_map(pagemap_t pm, uint64_t vaddr, uint64_t paddr, uint64_t flags) {
   if (!pm) return;
 
-  //trace("pm: %p, vaddr: %p, paddr: %p\n", pm, vaddr, paddr);
   uint64_t pml4_entry = (vaddr >> 39) & 0x1ff;
   uint64_t pml3_entry = (vaddr >> 30) & 0x1ff;
   uint64_t pml2_entry = (vaddr >> 21) & 0x1ff;
