@@ -109,6 +109,24 @@ static uint64_t *__pg_get_next_lvl(uint64_t *level, uint64_t entry,
   return NULL;
 }
 
+uint64_t pg_physical(pagemap_t pm, uint64_t vaddr) {
+  if (!pm) return 0;
+
+  uint64_t pml4_entry = (vaddr >> 39) & 0x1ff;
+  uint64_t pml3_entry = (vaddr >> 30) & 0x1ff;
+  uint64_t pml2_entry = (vaddr >> 21) & 0x1ff;
+  uint64_t pml1_entry = (vaddr >> 12) & 0x1ff;
+
+  uint64_t *pml3 = __pg_get_next_lvl(pm  , pml4_entry, 0, false);
+  if (!pml3) return 0;
+  uint64_t *pml2 = __pg_get_next_lvl(pml3, pml3_entry, 0, false);
+  if (!pml2) return 0;
+  uint64_t *pml1 = __pg_get_next_lvl(pml2, pml2_entry, 0, false);
+  if (!pml1) return 0;
+
+  return pml1[pml1_entry] & PTE_ADDR_MASK;
+}
+
 void pg_map(pagemap_t pm, uint64_t vaddr, uint64_t paddr, uint64_t flags) {
   if (!pm) return;
 
@@ -156,7 +174,7 @@ void pg_unmap(pagemap_t pm, uint64_t vaddr) {
   if (!pml1) return;
 
   pml1[pml1_entry] = 0;
-  cpu_invalidate_page(pm, vaddr);
+  cpu_invalidate_page(vaddr);
 }
 
 void pg_protect(pagemap_t pm, uint64_t vaddr, uint64_t flags) {

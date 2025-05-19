@@ -8,6 +8,7 @@
 #pragma once
 
 #include "mm/paging.h"
+#include <stddef.h>
 
 typedef struct __vma_region {
     uint64_t start;
@@ -25,4 +26,6 @@ typedef struct {
 } vma_ctx_t;
 
 vma_ctx_t *vma_alloc_ctx(pagemap_t pm, uint64_t start);
+void      *vma_alloc(vma_ctx_t *ctx, size_t length, uint64_t flags);
+void       vma_free(vma_ctx_t *ctx, void *addr);
 void       vma_free_ctx (vma_ctx_t *ctx);

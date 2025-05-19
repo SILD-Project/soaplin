@@ -54,7 +54,7 @@ void gdt_init() {
 
     gdt_reload_segments();
 
-    debug("arch: GDT & TSS initialized.\n");
+    trace("arch: GDT & TSS initialized.\n");
 }
 
 #endif

@@ -35,3 +35,4 @@ uint64_t limine_get_hhdm_offset();
 uint64_t limine_get_kernel_vaddr();
 uint64_t limine_get_kernel_paddr();
 uint64_t limine_get_kernel_ehdr_addr();
+uint64_t limine_get_rsdp();

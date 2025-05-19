@@ -81,7 +81,7 @@ void pmm_init() {
         if (entry->type == LIMINE_MEMMAP_USABLE || 
             entry->type == LIMINE_MEMMAP_BOOTLOADER_RECLAIMABLE)
         {
-            trace("pmm: found a usable memory block: %p-%p\n", entry->base, entry->base + entry->length);
+            trace("pmm: Found an usable memory block: %p-%p\n", entry->base, entry->base + entry->length);
 
             uint64_t newlen = ALIGN_DOWN(entry->length, PMM_PAGE_SIZE);
 

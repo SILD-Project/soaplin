@@ -63,6 +63,12 @@ static volatile struct limine_paging_mode_request pgmode_req = {
     .revision = 0
 };
 
+__attribute__((used, section(".limine_requests")))
+static volatile struct limine_rsdp_request rsdp_req = {
+    .id = LIMINE_RSDP_REQUEST,
+    .revision = 0
+};
+
 __attribute__((used, section(".limine_requests_start")))
 static volatile LIMINE_REQUESTS_START_MARKER;
 
@@ -110,3 +116,4 @@ uint64_t limine_get_hhdm_offset() { return hhdm_req.response->offset; }
 uint64_t limine_get_kernel_vaddr() { return kaddr_req.response->virtual_base; }
 uint64_t limine_get_kernel_paddr() { return kaddr_req.response->physical_base; }
 uint64_t limine_get_kernel_ehdr_addr() { return (uint64_t)execfile_req.response->executable_file->address; }
+uint64_t limine_get_rsdp() { return rsdp_req.response->address + limine_get_hhdm_offset(); }

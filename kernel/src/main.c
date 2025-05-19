@@ -9,6 +9,7 @@
 #include <stddef.h>
 #include <stdbool.h>
 
+#include <acpi/acpi.h>
 #include <arch/cpu.h>
 #include <boot/limine.h>
 #include <config.h>
@@ -19,6 +20,7 @@
 #include <mm/memop.h>
 #include <mm/pmm.h>
 #include "mm/paging.h"
+#include "mm/vma.h"
 
 void kmain(void) {
     tty_init();
@@ -26,7 +28,7 @@ void kmain(void) {
     log_register_output(sklogoutput_tty);
 
     limine_bootinfo_t *bi = limine_get_bootinfo();
-    trace("%s %s-%s (booted using %s %s, with firmware type %d)\n", KERNEL_NAME, KERNEL_VER,
+    info("%s %s-%s (booted using %s %s, with firmware type %d)\n", KERNEL_NAME, KERNEL_VER,
         bi->arch, bi->bl_name, bi->bl_ver, bi->fw_type);
 
     arch_init_stage1();
@@ -34,7 +36,8 @@ void kmain(void) {
     pmm_init();
     pg_init();
     
+    acpi_init();
 
-    // We're done, just hang...
+    // We're done, just hang... for now.
     hcf();
 }

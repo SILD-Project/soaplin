@@ -16,7 +16,7 @@ void cpu_load_pm(pagemap_t pm) {
 
 }
 
-void cpu_invalidate_page(pagemap_t pm, uint64_t vaddr) {
+void cpu_invalidate_page(uint64_t vaddr) {
     
 }
 

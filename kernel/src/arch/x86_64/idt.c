@@ -70,7 +70,7 @@ void idt_interrupt_handler(registers_t *regs) {
     fatal("r11: %p, r12: %p, r13: %p\n", regs->r11, regs->r12, regs->r13);
     fatal("r14: %p, r15: %p\n", regs->r14, regs->r15);
     fatal("rip: %p, cs: %p, ss: %p\n", regs->rip, regs->cs, regs->ss);
-    fatal("rflags: %p, err: %p, rsp: %p\n", regs->rflags, regs->err_code, regs->rsp);
+    fatal("rflags: %p, err: %d, rsp: %p\n", regs->rflags, regs->err_code, regs->rsp);
     __panic_display_bt(regs);
     hcf();
 }
@@ -103,7 +103,7 @@ void idt_init() {
     __asm__ volatile ("lidt %0" : : "m"(idtr));
     __asm__ volatile ("sti");
 
-    debug("arch: IDT loaded successfully\n");
+    trace("arch: IDT loaded successfully\n");
 }
 
 #endif
