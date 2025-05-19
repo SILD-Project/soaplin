@@ -2,7 +2,7 @@
  *  The Soaplin Kernel
  *  Copyright (C) 2025 The SILD Project
  *
- *  vmm.c - Virtual memory manager
+ *  pg.c - Virtual memory manager
  */
 
 #pragma once
@@ -21,13 +21,13 @@
 
 typedef uint64_t *pagemap_t;
 
-void vmm_init();
-pagemap_t vmm_alloc_pm();
-void vmm_free_pm(pagemap_t pm);
+void pg_init();
+pagemap_t pg_alloc_pm();
+void pg_free_pm(pagemap_t pm);
 
-void vmm_load_pm(pagemap_t pm);
-void vmm_map(pagemap_t pm, uint64_t vaddr, uint64_t paddr, uint64_t flags);
-void vmm_map_user(pagemap_t pm, uint64_t vaddr, uint64_t paddr,
+void pg_load_pm(pagemap_t pm);
+void pg_map(pagemap_t pm, uint64_t vaddr, uint64_t paddr, uint64_t flags);
+void pg_map_user(pagemap_t pm, uint64_t vaddr, uint64_t paddr,
                   uint64_t flags);
-void vmm_unmap(pagemap_t pm, uint64_t vaddr);
-void vmm_protect(pagemap_t pm, uint64_t vaddr, uint64_t flags);
+void pg_unmap(pagemap_t pm, uint64_t vaddr);
+void pg_protect(pagemap_t pm, uint64_t vaddr, uint64_t flags);

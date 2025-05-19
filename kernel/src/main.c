@@ -5,7 +5,6 @@
  *  main.c - Kernel entry point and initialization.
  */
 
-#include "mm/vmm.h"
 #include <stdint.h>
 #include <stddef.h>
 #include <stdbool.h>
@@ -19,6 +18,7 @@
 #include <lib/logoutputs_sk.h>
 #include <mm/memop.h>
 #include <mm/pmm.h>
+#include "mm/paging.h"
 
 void kmain(void) {
     tty_init();
@@ -32,12 +32,8 @@ void kmain(void) {
     arch_init_stage1();
 
     pmm_init();
-    vmm_init();
-    /*uint8_t* mem = pmm_alloc_page() + 0xFFFF800000000000;
-    memcpy(mem, "HelloWorld\0", 11);
-    trace("pmm: Read from allocated memory: %s\n", mem);
-    pmm_free_page(mem);
-    trace("pmm: Freed memory.\n");*/
+    pg_init();
+    
 
     // We're done, just hang...
     hcf();

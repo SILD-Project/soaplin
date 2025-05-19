@@ -5,13 +5,13 @@
  *  cpu.c - x86_64 CPU control implementation.
  */
 
-#include "mm/vmm.h"
 #if defined (__x86_64__)
 
 #include <arch/x86_64/gdt.h>
 #include <arch/x86_64/idt.h>
 #include <arch/cpu.h>
 #include <mm/pmm.h>
+#include "mm/paging.h"
 
 void arch_init_stage1() {
     gdt_init();

@@ -7,7 +7,7 @@
 
 #pragma once
 
-#include "mm/vmm.h"
+#include "mm/paging.h"
 
 // Stage 1 initialization: Core components (such as the GDT & IDT on x86_64...)
 void arch_init_stage1();

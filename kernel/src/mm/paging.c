@@ -14,13 +14,13 @@
 #include <lib/log.h>
 #include <mm/memop.h>
 #include <mm/pmm.h>
-#include <mm/vmm.h>
+#include <mm/paging.h>
 #include <stdint.h>
 
-pagemap_t vmm_kernel_pm = NULL;
-pagemap_t vmm_current_pm = NULL;
+pagemap_t pg_kernel_pm = NULL;
+pagemap_t pg_current_pm = NULL;
 
-void vmm_init() {
+void pg_init() {
 #if !defined(__x86_64__)
     fatal("vmm: not implemented\n");
     hcf();
@@ -28,7 +28,7 @@ void vmm_init() {
     // Our objective here is to recreate the
     // kernel page map that Limine provide us
 
-    vmm_kernel_pm = vmm_alloc_pm();
+    pg_kernel_pm = pg_alloc_pm();
 
     uint64_t kvaddr = limine_get_kernel_vaddr();
     uint64_t kpaddr = limine_get_kernel_paddr();
@@ -53,42 +53,42 @@ void vmm_init() {
         size_t length = ALIGN_UP(cur_phdr->p_memsz, PMM_PAGE_SIZE);
         
         for (uint64_t i = 0; i < length; i += PMM_PAGE_SIZE) {
-            vmm_map(vmm_kernel_pm, cur_phdr->p_vaddr + i, phys + i, flags);
+            pg_map(pg_kernel_pm, cur_phdr->p_vaddr + i, phys + i, flags);
         }
         trace("vmm: Mapped range: %p -> %p (length: %x)\n", phys, cur_phdr->p_vaddr, length);
     }
 
     for (uint64_t i = 0; i < 0x100000000; i += PMM_PAGE_SIZE)
-        vmm_map(vmm_kernel_pm, higher_half(i), i, PTE_PRESENT | PTE_WRITE);
+        pg_map(pg_kernel_pm, higher_half(i), i, PTE_PRESENT | PTE_WRITE);
     trace("vmm: Mapped range: %p -> %p (length: %x)\n", 0x0, 0xFFFF800000000000, 0x100000000);
 
-    vmm_load_pm(vmm_kernel_pm);
+    pg_load_pm(pg_kernel_pm);
     trace("vmm: Initialized.\n");
 }
 
-void vmm_load_pm(pagemap_t pm) {
+void pg_load_pm(pagemap_t pm) {
     if (!pm)
         return;
 
-    vmm_current_pm = pm;
+    pg_current_pm = pm;
     cpu_load_pm((pagemap_t)physical((uint64_t)pm));
 }
 
-pagemap_t vmm_alloc_pm() {
+pagemap_t pg_alloc_pm() {
     pagemap_t pm = (pagemap_t)higher_half((uint64_t)pmm_alloc_page());
     memset((void*)pm, 0, PMM_PAGE_SIZE);
 
-    if (vmm_kernel_pm)
+    if (pg_kernel_pm)
     {
         for (int i = 256; i < 512; i++)
-            pm[i] = vmm_kernel_pm[i];
+            pm[i] = pg_kernel_pm[i];
     }
 
     return pm;
 }
 
-void vmm_free_pm(pagemap_t pm) {
-    if (pm == vmm_kernel_pm)
+void pg_free_pm(pagemap_t pm) {
+    if (pm == pg_kernel_pm)
     {
         warn("vmm: Who tried to free the kernel's pagemap?!\n");
         return;
@@ -96,7 +96,7 @@ void vmm_free_pm(pagemap_t pm) {
     pmm_free_page((void*)pm);
 }
 
-static uint64_t *__vmm_get_next_lvl(uint64_t *level, uint64_t entry,
+static uint64_t *__pg_get_next_lvl(uint64_t *level, uint64_t entry,
                                     uint64_t flags, bool alloc) {
   if (level[entry] & PTE_PRESENT)
     return (uint64_t *)higher_half(PTE_GET_ADDR(level[entry]));
@@ -109,7 +109,7 @@ static uint64_t *__vmm_get_next_lvl(uint64_t *level, uint64_t entry,
   return NULL;
 }
 
-void vmm_map(pagemap_t pm, uint64_t vaddr, uint64_t paddr, uint64_t flags) {
+void pg_map(pagemap_t pm, uint64_t vaddr, uint64_t paddr, uint64_t flags) {
   if (!pm) return;
 
   uint64_t pml4_entry = (vaddr >> 39) & 0x1ff;
@@ -117,14 +117,14 @@ void vmm_map(pagemap_t pm, uint64_t vaddr, uint64_t paddr, uint64_t flags) {
   uint64_t pml2_entry = (vaddr >> 21) & 0x1ff;
   uint64_t pml1_entry = (vaddr >> 12) & 0x1ff;
 
-  uint64_t *pml3 = __vmm_get_next_lvl(pm  , pml4_entry, PTE_PRESENT | PTE_WRITE, true);
-  uint64_t *pml2 = __vmm_get_next_lvl(pml3, pml3_entry, PTE_PRESENT | PTE_WRITE, true);
-  uint64_t *pml1 = __vmm_get_next_lvl(pml2, pml2_entry, PTE_PRESENT | PTE_WRITE, true);
+  uint64_t *pml3 = __pg_get_next_lvl(pm  , pml4_entry, PTE_PRESENT | PTE_WRITE, true);
+  uint64_t *pml2 = __pg_get_next_lvl(pml3, pml3_entry, PTE_PRESENT | PTE_WRITE, true);
+  uint64_t *pml1 = __pg_get_next_lvl(pml2, pml2_entry, PTE_PRESENT | PTE_WRITE, true);
 
   pml1[pml1_entry] = paddr | flags;
 }
 
-void vmm_map_user(pagemap_t pm, uint64_t vaddr, uint64_t paddr,
+void pg_map_user(pagemap_t pm, uint64_t vaddr, uint64_t paddr,
                   uint64_t flags) {
   if (!pm) return;
 
@@ -133,14 +133,14 @@ void vmm_map_user(pagemap_t pm, uint64_t vaddr, uint64_t paddr,
   uint64_t pml2_entry = (vaddr >> 21) & 0x1ff;
   uint64_t pml1_entry = (vaddr >> 12) & 0x1ff;
 
-  uint64_t *pml3 = __vmm_get_next_lvl(pm  , pml4_entry, flags, true);
-  uint64_t *pml2 = __vmm_get_next_lvl(pml3, pml3_entry, flags, true);
-  uint64_t *pml1 = __vmm_get_next_lvl(pml2, pml2_entry, flags, true);
+  uint64_t *pml3 = __pg_get_next_lvl(pm  , pml4_entry, flags, true);
+  uint64_t *pml2 = __pg_get_next_lvl(pml3, pml3_entry, flags, true);
+  uint64_t *pml1 = __pg_get_next_lvl(pml2, pml2_entry, flags, true);
 
   pml1[pml1_entry] = paddr | flags;
 }
 
-void vmm_unmap(pagemap_t pm, uint64_t vaddr) {
+void pg_unmap(pagemap_t pm, uint64_t vaddr) {
   if (!pm) return;
 
   uint64_t pml4_entry = (vaddr >> 39) & 0x1ff;
@@ -148,18 +148,18 @@ void vmm_unmap(pagemap_t pm, uint64_t vaddr) {
   uint64_t pml2_entry = (vaddr >> 21) & 0x1ff;
   uint64_t pml1_entry = (vaddr >> 12) & 0x1ff;
 
-  uint64_t *pml3 = __vmm_get_next_lvl(pm  , pml4_entry, 0, false);
+  uint64_t *pml3 = __pg_get_next_lvl(pm  , pml4_entry, 0, false);
   if (!pml3) return;
-  uint64_t *pml2 = __vmm_get_next_lvl(pml3, pml3_entry, 0, false);
+  uint64_t *pml2 = __pg_get_next_lvl(pml3, pml3_entry, 0, false);
   if (!pml2) return;
-  uint64_t *pml1 = __vmm_get_next_lvl(pml2, pml2_entry, 0, false);
+  uint64_t *pml1 = __pg_get_next_lvl(pml2, pml2_entry, 0, false);
   if (!pml1) return;
 
   pml1[pml1_entry] = 0;
   cpu_invalidate_page(pm, vaddr);
 }
 
-void vmm_protect(pagemap_t pm, uint64_t vaddr, uint64_t flags) {
+void pg_protect(pagemap_t pm, uint64_t vaddr, uint64_t flags) {
   if (!pm) return;
   
   uint64_t pml4_entry = (vaddr >> 39) & 0x1ff;
@@ -167,11 +167,11 @@ void vmm_protect(pagemap_t pm, uint64_t vaddr, uint64_t flags) {
   uint64_t pml2_entry = (vaddr >> 21) & 0x1ff;
   uint64_t pml1_entry = (vaddr >> 12) & 0x1ff;
 
-  uint64_t *pml3 = __vmm_get_next_lvl(pm  , pml4_entry, 0, false);
+  uint64_t *pml3 = __pg_get_next_lvl(pm  , pml4_entry, 0, false);
   if (!pml3) return;
-  uint64_t *pml2 = __vmm_get_next_lvl(pml3, pml3_entry, 0, false);
+  uint64_t *pml2 = __pg_get_next_lvl(pml3, pml3_entry, 0, false);
   if (!pml2) return;
-  uint64_t *pml1 = __vmm_get_next_lvl(pml2, pml2_entry, 0, false);
+  uint64_t *pml1 = __pg_get_next_lvl(pml2, pml2_entry, 0, false);
   if (!pml1) return;
 
   uint64_t paddr = pml1[pml1_entry] & PTE_ADDR_MASK;
