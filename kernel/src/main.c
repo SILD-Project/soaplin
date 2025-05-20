@@ -10,6 +10,7 @@
 #include <stdbool.h>
 
 #include <acpi/acpi.h>
+#include <acpi/madt.h>
 #include <arch/cpu.h>
 #include <boot/limine.h>
 #include <config.h>
@@ -19,6 +20,8 @@
 #include <lib/logoutputs_sk.h>
 #include <mm/memop.h>
 #include <mm/pmm.h>
+#include "dev/ioapic.h"
+#include "dev/lapic.h"
 #include "mm/paging.h"
 #include "mm/vma.h"
 
@@ -37,7 +40,14 @@ void kmain(void) {
     pg_init();
     
     acpi_init();
+    madt_init();
+    lapic_init();
+    ioapic_init();
+    cpu_init_smp();
+    cpu_init_timer();
 
+    while (1)
+        ;;
     // We're done, just hang... for now.
-    hcf();
+    //hcf();
 }

@@ -8,6 +8,14 @@
 
 #include <stdint.h>
 
+#define VT_NONE      0
+#define VT_EXCEPTION 1
+#define VT_HWI       2
+#define VT_SWI       3
+#define VT_SPURIOUS  4
+
+#define IDT_SPURIOUS_INT 0xFF
+
 typedef struct {
   uint64_t r15;
   uint64_t r14;
@@ -33,6 +41,8 @@ typedef struct {
   uint64_t ss;
 } __attribute__((packed)) registers_t;
 
+typedef void(*interrupt_handler)(registers_t*);
+
 typedef struct {
 	uint16_t    isr_low;
 	uint16_t    kernel_cs;
@@ -48,4 +58,5 @@ typedef struct {
 	uint64_t	base;
 } __attribute__((packed)) idtr_t;
 
+void idt_register_handler(uint8_t vector, void *isr);
 void idt_init(void);

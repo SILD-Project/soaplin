@@ -15,14 +15,36 @@ typedef struct {
     char oemid[6];
     char rev;
     uint32_t rsdt_addr;
-} acpi_rsdp_t;
+} __attribute__((packed)) acpi_rsdp_t;
 
 typedef struct {
     acpi_rsdp_t base;
     uint32_t len;
     uint64_t xsdt_addr;
     char chksumex;
-} acpi_xsdp_t;
+} __attribute__((packed)) acpi_xsdp_t;
 
-void acpi_init();
-void acpi_init();
+typedef struct {
+    char sign[4];
+    uint32_t len;
+    uint8_t rev;
+    uint8_t chksum;
+    char oemid[6];
+    char oemtabid[8];
+    uint32_t oemrev;
+    uint32_t creaid;
+    uint32_t crearev;
+} __attribute__((packed)) acpi_sdt_hdr_t;
+
+typedef struct {
+    acpi_sdt_hdr_t hdr;
+    char entries[];
+} acpi_rsdt_t;
+
+typedef struct {
+    acpi_sdt_hdr_t hdr;
+    char entries[];
+} acpi_xsdt_t;
+
+void *acpi_find_table(char *sign);
+void  acpi_init();
