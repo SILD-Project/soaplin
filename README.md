@@ -1,1 +1,1 @@
-A rewrite is available on the "rewrite" branch
+This is a legacy version of the kernel.
