@@ -28,6 +28,12 @@ void lapic_eoi() {
     __lapic_write(LAPIC_EOI, 0x0);
 }
 
+void lapic_ipi(uint32_t id, uint8_t dat) {
+  __lapic_write(0x310, id << LAPIC_ICDESTSHIFT);
+  __lapic_write(0x300, dat);
+}
+
+
 uint32_t lapic_get_id() {
     return __lapic_read(LAPIC_ID) >> LAPIC_ICDESTSHIFT;
 }

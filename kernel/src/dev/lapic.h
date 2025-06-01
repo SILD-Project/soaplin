@@ -23,4 +23,5 @@ typedef struct {
 
 void lapic_init();
 void lapic_eoi();
+void lapic_ipi(uint32_t id, uint8_t dat);
 uint32_t lapic_get_id();

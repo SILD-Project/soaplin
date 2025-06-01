@@ -1,3 +1,9 @@
+;
+;  The Soaplin Kernel
+;  Copyright (C) 2025 The SILD Project
+;
+;  idt.asm - Defines the handler for IDT entries.
+;
 
 %macro pushall 0
   push rax

@@ -1,3 +1,9 @@
+;
+;  The Soaplin Kernel
+;  Copyright (C) 2025 The SILD Project
+;
+;  gdt.asm - Utility for reloading the segments.
+
 bits 64
 
 section .text

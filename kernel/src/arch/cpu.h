@@ -25,5 +25,8 @@ void cpu_init_smp();
 // Initialize the CPU's timer
 void cpu_init_timer();
 
+// Enable/disable interrupts.
+void cpu_enable_ints(int enabled);
+
 // Disable interrupts and halt the system.
 void hcf();

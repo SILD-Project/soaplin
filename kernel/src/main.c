@@ -20,6 +20,7 @@
 #include <lib/logoutputs_sk.h>
 #include <mm/memop.h>
 #include <mm/pmm.h>
+#include "arch/x86_64/smp.h"
 #include "dev/ioapic.h"
 #include "dev/lapic.h"
 #include "mm/paging.h"
@@ -45,6 +46,10 @@ void kmain(void) {
     ioapic_init();
     cpu_init_smp();
     cpu_init_timer();
+
+    
+    cpu_enable_ints(1);
+    //lapic_ipi(bootstrap_lapic_id, 32);
 
     while (1)
         ;;

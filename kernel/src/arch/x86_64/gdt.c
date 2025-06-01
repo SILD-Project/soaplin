@@ -53,8 +53,6 @@ void gdt_init() {
     __asm__ volatile("ltr %0\n\t" : : "r"((uint16_t)0x28)); // 0x20 (last GDT entry) + 0x8 (size of a GDT entry)
 
     gdt_reload_segments();
-
-    trace("arch: GDT & TSS initialized.\n");
 }
 
 #endif

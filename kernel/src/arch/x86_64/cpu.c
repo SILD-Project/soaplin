@@ -29,6 +29,10 @@ void cpu_invalidate_page(uint64_t vaddr) {
     asm volatile ( "invlpg (%0)" : : "b"(vaddr) : "memory" );
 }
 
+void cpu_enable_ints(int enabled) {
+  if (enabled) asm("sti"); else asm("cli");
+}
+
 void hcf() {
     asm ("cli");
     for (;;) {

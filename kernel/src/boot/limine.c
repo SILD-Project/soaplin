@@ -9,7 +9,7 @@
 #include <stddef.h>
 #include <boot/limine.h>
 #include <deps/limine.h>
-#include <exec/elf.h>
+#include <proc/exec/elf.h>
 
 __attribute__((used, section(".limine_requests")))
 static volatile LIMINE_BASE_REVISION(3);

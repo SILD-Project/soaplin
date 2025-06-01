@@ -6,10 +6,12 @@
  */
 #include <stdarg.h>
 #include <lib/log.h>
+#include <lib/spinlock.h>
 
 static int __logger_max_loglevel = 0;
 static log_output_func __logger_outputs[16];
 static int __logger_output_count = 0;
+static spinlock_t __logger_lock;
 
 static char* prelog[7] = {
     "\033[38;2;169;68;66;mFAULT  | \033[39m",
@@ -41,6 +43,7 @@ void log(int loglevel, char *str, ...) {
     if (loglevel > __logger_max_loglevel)
         return; // The user does not want this type of log to show up.
 
+    sl_acquire(&__logger_lock);
     va_list vl;
     va_start(vl, str);
 
@@ -50,4 +53,5 @@ void log(int loglevel, char *str, ...) {
     }
 
     va_end(vl);
+    sl_release(&__logger_lock);
 }

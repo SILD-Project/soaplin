@@ -77,6 +77,10 @@ void idt_set_descriptor(uint8_t vector, void* isr, uint8_t flags) {
 
 extern void* isr_stub_table[];
 
+void idt_load() {
+  __asm__ volatile ("lidt %0" : : "m"(idtr));
+}
+
 void idt_init() {
   idtr.base = (uintptr_t)&idt[0];
   idtr.limit = (uint16_t)sizeof(idt_entry_t) * 256 - 1;
@@ -99,9 +103,8 @@ void idt_init() {
   __idt_vectors[IDT_SPURIOUS_INT] = VT_SPURIOUS;
   trace("idt: Spurious interrupt vector has been set!\n");
 
-  __asm__ volatile ("lidt %0" : : "m"(idtr));
-  __asm__ volatile ("sti");
-
+  //__asm__ volatile ("sti");
+  idt_load();
   trace("arch: IDT loaded successfully\n");
 }
 

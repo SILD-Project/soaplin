@@ -60,3 +60,4 @@ typedef struct {
 
 void idt_register_handler(uint8_t vector, void *isr);
 void idt_init(void);
+void idt_load();
