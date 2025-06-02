@@ -6,10 +6,6 @@
  */
 
 #include "arch/cpu.h"
-#include "arch/x86_64/gdt.h"
-#include "arch/x86_64/idt.h"
-#include "dev/lapic.h"
-#include "mm/paging.h"
 #include <boot/limine.h>
 #include <deps/limine.h>
 #include <lib/log.h>

@@ -5,7 +5,7 @@
  *  lapic.c - Local APIC implementation.
  */
 
-#include "dev/lapic.h"
+#include "arch/x86_64/lapic.h"
 #include "arch/x86_64/idt.h"
 #include "lib/log.h"
 #include "mm/pmm.h"

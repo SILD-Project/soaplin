@@ -42,8 +42,8 @@ void kmain(void) {
     
     acpi_init();
     madt_init();
-    lapic_init();
-    ioapic_init();
+
+    cpu_init_apic();
     cpu_init_smp();
     cpu_init_timer();
 

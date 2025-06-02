@@ -7,6 +7,8 @@
 
 #if defined (__x86_64__)
 
+#include "arch/x86_64/lapic.h"
+#include "arch/x86_64/ioapic.h"
 #include <arch/x86_64/gdt.h>
 #include <arch/x86_64/idt.h>
 #include <arch/cpu.h>
@@ -31,6 +33,11 @@ void cpu_invalidate_page(uint64_t vaddr) {
 
 void cpu_enable_ints(int enabled) {
   if (enabled) asm("sti"); else asm("cli");
+}
+
+void cpu_init_apic() {
+  lapic_init();
+  ioapic_init();
 }
 
 void hcf() {

@@ -5,7 +5,6 @@
  *  idt.c - x86_64 Interrupt Descriptor Table implementation.
  */
 
-#include "dev/lapic.h"
 #if defined(__x86_64__)
 
 #include <stdint.h>
@@ -13,7 +12,8 @@
 #include <arch/cpu.h>
 #include <arch/x86_64/idt.h>
 #include <arch/x86_64/smp.h>
-#include <dev/ioapic.h>
+#include <arch/x86_64/ioapic.h>
+#include "arch/x86_64/lapic.h"
 #include <lib/log.h>
 
 __attribute__((aligned(0x10))) 

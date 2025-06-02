@@ -25,6 +25,9 @@ void cpu_init_smp();
 // Initialize the CPU's timer
 void cpu_init_timer();
 
+// Initialize the APIC.
+void cpu_init_apic();
+
 // Enable/disable interrupts.
 void cpu_enable_ints(int enabled);
 
