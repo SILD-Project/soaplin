@@ -21,8 +21,6 @@
 #include <mm/memop.h>
 #include <mm/pmm.h>
 #include "arch/x86_64/smp.h"
-#include "dev/ioapic.h"
-#include "dev/lapic.h"
 #include "mm/paging.h"
 #include "mm/vma.h"
 
