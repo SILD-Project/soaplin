@@ -9,7 +9,7 @@
 #include <stddef.h>
 
 #include <acpi/madt.h>
-#include <dev/ioapic.h>
+#include <arch/x86_64/ioapic.h>
 #include <lib/log.h>
 #include <mm/pmm.h>
 

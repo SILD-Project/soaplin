@@ -8,7 +8,7 @@
 
 #include <arch/x86_64/io.h>
 #include <arch/x86_64/idt.h>
-#include <dev/lapic.h>
+#include <arch/x86_64/lapic.h>
 #include <lib/log.h>
 
 void pit_handler(registers_t *reg) {

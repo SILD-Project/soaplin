@@ -37,3 +37,5 @@ uint64_t limine_get_kernel_paddr();
 uint64_t limine_get_kernel_ehdr_addr();
 uint64_t limine_get_rsdp();
 struct limine_mp_response *limine_get_smp();
+
+struct limine_file *limine_get_module(int no);

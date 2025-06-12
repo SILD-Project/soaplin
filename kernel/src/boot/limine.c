@@ -5,6 +5,7 @@
  *  limine.c - Limine bootloader interface implementation.
  */
 
+#include "lib/log.h"
 #include <stdbool.h>
 #include <stddef.h>
 #include <boot/limine.h>
@@ -75,6 +76,13 @@ static volatile struct limine_mp_request smp_req = {
     .revision = 0
 };
 
+__attribute__((used, section(".limine_requests")))
+static volatile struct limine_module_request mod_req = {
+    .id = LIMINE_MODULE_REQUEST,
+    .revision = 3
+};
+
+
 __attribute__((used, section(".limine_requests_start")))
 static volatile LIMINE_REQUESTS_START_MARKER;
 
@@ -124,3 +132,17 @@ uint64_t limine_get_kernel_paddr() { return kaddr_req.response->physical_base; }
 uint64_t limine_get_kernel_ehdr_addr() { return (uint64_t)execfile_req.response->executable_file->address; }
 uint64_t limine_get_rsdp() { return rsdp_req.response->address + limine_get_hhdm_offset(); }
 struct limine_mp_response *limine_get_smp() { return smp_req.response; }
+
+struct limine_file *limine_get_module(int no) {
+    if (mod_req.response == NULL) {
+        trace("limine: mod_req.response is NULL (why?)\n");
+        while (1)
+            ;;
+    }
+    if (mod_req.response->module_count < (uint64_t)no) {
+        trace("limine: mod_req.response->module_count < (uint64_t)no (modcount: %d)\n", mod_req.response->module_count);
+        return NULL;
+    }
+
+    return mod_req.response->modules[no];
+}

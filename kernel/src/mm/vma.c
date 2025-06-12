@@ -14,6 +14,8 @@
 #include "mm/vma.h"
 #include "mm/pmm.h"
 
+vma_ctx_t *vma_kernel_ctx;
+
 vma_ctx_t *vma_alloc_ctx(pagemap_t pm, uint64_t start) {
     if (pm == NULL)
         return NULL;
@@ -28,6 +30,23 @@ vma_ctx_t *vma_alloc_ctx(pagemap_t pm, uint64_t start) {
 
     ctx->root = root_reg;
     return ctx;
+}
+
+void *vma_realloc(vma_ctx_t *ctx, void *ptr, size_t length, uint64_t flags) {
+    if (!ctx || !ptr) {
+        return NULL;
+    }
+
+    if (length == 0)
+    {
+        vma_free(ctx, ptr);
+        return NULL;
+    }
+
+    void *newmem = vma_alloc(ctx, length, flags);
+    memcpy(newmem, ptr, length);
+    vma_free(ctx, ptr);
+    return newmem;
 }
 
 void *vma_alloc(vma_ctx_t *ctx, size_t length, uint64_t flags) {

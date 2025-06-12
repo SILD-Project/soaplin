@@ -1,3 +1,10 @@
+/*
+ *  The Soaplin Kernel
+ *  Copyright (C) 2025 The SILD Project
+ *
+ *  vfs.h - Common interface across filesystems
+ */
+
 #pragma once
 
 #include <stddef.h>
@@ -17,6 +24,7 @@ typedef struct vnode_ops {
 
 typedef struct vnode {
   char name[256];
+  int inode;
   vnode_type_t type;
   uint32_t refcount;
   struct vnode* parent; // If this vnode exists, then it's parent too.
@@ -38,8 +46,6 @@ typedef struct fs {
 } fs_t;
 
 void vfs_init(void);
-int vfs_mount(char *path, fs_t *fs);
-int vfs_unmount(char *path);
 int vfs_open(vnode_t *curdir, const char *path, vnode_t **out);
 int vfs_read(vnode_t *vn, void *buf, size_t off, size_t size);
 vnode_t *vfs_create_node(char *name, vnode_type_t type);

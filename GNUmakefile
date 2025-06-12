@@ -6,7 +6,7 @@ MAKEFLAGS += -rR
 ARCH := x86_64
 
 # Default user QEMU flags. These are appended to the QEMU command calls.
-QEMUFLAGS := -m 2G
+QEMUFLAGS := -m 2G -serial stdio
 
 override IMAGE_NAME := soaplin-$(ARCH)
 
@@ -22,6 +22,11 @@ all: $(IMAGE_NAME).iso
 
 .PHONY: all-hdd
 all-hdd: $(IMAGE_NAME).hdd
+
+.PHONY: tar
+tar:
+	@echo "  TAR  root.tar"
+	@tar --format=ustar -cvf root.tar -C root .
 
 .PHONY: run
 run: run-$(ARCH)
@@ -168,9 +173,10 @@ kernel: kernel-deps
 	@$(MAKE) -C kernel
 	@echo "Soaplin $(ARCH) has been compiled successfully."
 
-$(IMAGE_NAME).iso: limine/limine kernel
+$(IMAGE_NAME).iso: limine/limine kernel tar
 	@rm -rf iso_root
 	@mkdir -p iso_root/boot
+	@cp root.tar iso_root/boot/
 	@cp kernel/bin-$(ARCH)/kernel iso_root/boot/
 	@mkdir -p iso_root/boot/limine
 	@cp limine.conf iso_root/boot/limine/
