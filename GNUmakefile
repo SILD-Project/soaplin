@@ -23,10 +23,10 @@ all: $(IMAGE_NAME).iso
 .PHONY: all-hdd
 all-hdd: $(IMAGE_NAME).hdd
 
-.PHONY: tar
-tar:
-	@echo "  TAR  root.tar"
-	@tar --format=ustar -cvf root.tar -C root .
+.PHONY: cpio
+cpio:
+	@echo "  CPIO  root.cpio"
+	@cd root && find . | cpio -o -H newc > ../root.cpio
 
 .PHONY: run
 run: run-$(ARCH)
@@ -173,10 +173,10 @@ kernel: kernel-deps
 	@$(MAKE) -C kernel
 	@echo "Soaplin $(ARCH) has been compiled successfully."
 
-$(IMAGE_NAME).iso: limine/limine kernel tar
+$(IMAGE_NAME).iso: limine/limine kernel cpio
 	@rm -rf iso_root
 	@mkdir -p iso_root/boot
-	@cp root.tar iso_root/boot/
+	@cp root.cpio iso_root/boot/
 	@cp kernel/bin-$(ARCH)/kernel iso_root/boot/
 	@mkdir -p iso_root/boot/limine
 	@cp limine.conf iso_root/boot/limine/

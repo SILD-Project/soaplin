@@ -51,13 +51,13 @@ void kmain(void) {
         trace("kernel: Could not find '/dir' on ramfs.\n");
     } else {
         trace("kernel: Found '/dir' on ramfs.\n");
-        dir->ops->lookup(root, "hey.txt", &hey);
+        dir->ops->lookup(dir, "hey.txt", &hey);
         if (!hey) {
             trace("kernel: Could not find '/dir/hey.txt' on ramfs.\n");
         } else {
-            trace("kernel: Found '/dir/hey.txt' on ramfs.\n");
-            char buf[16];
-            int read_bytes = hey->ops->read(hey, buf, 2, 16);
+            trace("kernel: Found '%s' on ramfs.\n", hey->name);
+            char buf[23];
+            int read_bytes = hey->ops->read(hey, buf, 2, 23);
             trace("kernel: Read %d bytes from '/dir/hey.txt' with offset 2: %s\n", read_bytes, buf);
         }
     }

@@ -2,174 +2,162 @@
  *  The Soaplin Kernel
  *  Copyright (C) 2025 The SILD Project
  *
- *  ramfs.c - USTAR-based in-RAM file system.
+ *  ramfs.c - CPIO-based in-RAM file system.
  */
 
 #include "deps/limine.h"
 #include "fs/vfs.h"
+#include "lib/hashmap.h"
 #include "lib/log.h"
 #include "mm/paging.h"
 #include "mm/vma.h"
 #include <fs/ramfs.h>
 #include <boot/limine.h>
 #include <mm/memop.h>
+#include <stdbool.h>
+#include <stddef.h>
 #include <stdint.h>
 #include <lib/string.h>
 
-#define TARHDR_LIST_INCR 16
-static ustar_hdr_t **_tarhdr_list = NULL;
-static int _tarhdr_list_count = 0;
-static int __ramfs_ustarhdr_last_inode = -1;
+#define _ramfs_align4(x) (((x) + 3) & ~3)
 
-static void _ramfs_extend_tarhdr_list() {
-    if (!_tarhdr_list && _tarhdr_list_count == 0) {
-        _tarhdr_list_count += TARHDR_LIST_INCR;
-        _tarhdr_list = vma_alloc(vma_kernel_ctx, sizeof(void*) * _tarhdr_list_count, PTE_PRESENT | PTE_WRITE);
-    } else {
-        _tarhdr_list_count += TARHDR_LIST_INCR;
-        _tarhdr_list = vma_realloc(vma_kernel_ctx, _tarhdr_list, sizeof(void*) * _tarhdr_list_count, PTE_PRESENT | PTE_WRITE);
-    }
-}
-static int __ramfs_octal_to_bin(unsigned char *str, int size) {
-    int n = 0;
-    for (int i = 0; i < size; i++) {
-        n = (n << 3) + (str[i] - '0');
-    }
-    return n;
-}
-static void __ramfs_normalize_name(char *name) {
-    if (name[0] == '.' && name[1] == '/')
-        memmove(name, name + 1, strlen(name + 1) + 1);
+static void _ramfs_combine_path(char *out, const char *path1, const char *path2) {
+    if (!out)
+        return;
 
-    size_t len = strlen(name);
-    if (len > 1 && name[len - 1] == '/')
-        name[len - 1] = '\0';
-}
-static ustar_hdr_t *__ramfs_lookup_ustarhdr(const char *name, int size) {
-    for (int i = 0; i < _tarhdr_list_count; i++) {
-        ustar_hdr_t *hdr = _tarhdr_list[i];
-        if (!hdr) continue;
+    const int max_len = 256;
+    int len1 = 0;
+    int len2 = 0;
 
-        if (memcmp(hdr->name, name, size) == 0) {
-            __ramfs_ustarhdr_last_inode = i;
-            return hdr;
+    if (path1) {
+        while (len1 < max_len && path1[len1] != '\0') {
+            len1++;
         }
     }
-    __ramfs_ustarhdr_last_inode = 0;
-    return NULL;
+
+    if (path2) {
+        while (len2 < max_len && path2[len2] != '\0') {
+            len2++;
+        }
+    }
+
+    int pos = 0;
+    if (len1 > 0) {
+        if (len1 > max_len)
+            len1 = max_len;
+        memcpy(out + pos, path1, len1);
+        pos += len1;
+    }
+
+    if (pos > 0 && out[pos -1] != '/' && len2 > 0 && pos < max_len -1) {
+        out[pos] = '/';
+        pos++;
+    }
+
+    if (len2 > 0) {
+        int to_copy = max_len - pos - 1;
+        if (to_copy > len2)
+            to_copy = len2;
+        memcpy(out + pos, path2, to_copy);
+        pos += to_copy;
+    }
+
+    if (pos >= max_len)
+        pos = max_len - 1;
+    out[pos] = '\0';
 }
 
-vnode_ops_t ramfs_dir_ops = {
-    .lookup = ramfs_lookup,
-    .read = NULL
-};
+static hashmap_t hdr_map;
 
-vnode_ops_t ramfs_file_ops = {
-    .lookup = NULL,
-    .read = ramfs_read
+static vnode_ops_t ramfs_file_ops = {
+    .lookup = ramfs_lookup,
+    .read   = ramfs_read
 };
 
 int ramfs_read(struct vnode *vn, void *buf, size_t off, size_t size) {
-    uint8_t *hdr_addr = (uint8_t *)__ramfs_lookup_ustarhdr(vn->name, strlen(vn->name));
-    ustar_hdr_t *hdr = (ustar_hdr_t *)hdr_addr;
+    // TODO: offset is ignored
+    if (!vn || !buf || size == 0)
+        return -1;
 
-    uint32_t filesize = __ramfs_octal_to_bin((unsigned char*)hdr->size, 12);
+    cpio_newc_hdr_t *hdr = hashmap_get(&hdr_map, &vn->name[1]);
+    if (!hdr)
+        return -2;
 
-    if (off >= filesize)
-        return 0;
-
-    if (off + size > filesize)
-        size = filesize - off;
-
-    uint8_t *filecontent_addr = hdr_addr + 512;
-
-    memcpy(buf, filecontent_addr + off, size);
-
-    return size;
+    int file_name_size = strtoul(hdr->c_namesize, 8);
+    int file_size = strtoul(hdr->c_filesize, 8);
+    int read_size = size;
+    if (file_size <= read_size)
+        read_size = file_size;
+    
+    const char *contents_addr = (const char *)((uint8_t *)hdr + _ramfs_align4(sizeof(cpio_newc_hdr_t) + file_name_size));
+    memcpy(buf, contents_addr, read_size);
+    return read_size;
 }
 
 int ramfs_lookup(struct vnode *vn, const char *name, struct vnode **out) {
-    if (!out) return -1;
-    *out = NULL;
+    if (!out)
+        return -1;
 
-    char namebuf[4096];
-    int vnlen = strlen(vn->name);
-    int namelen = strlen(name);
-    bool has_slash = (vnlen > 0 && vn->name[vnlen - 1] == '/');
-    int total_len = has_slash ? vnlen + namelen : vnlen + 1 + namelen;
+    char _temp_name_buf[256];
+    _ramfs_combine_path(_temp_name_buf, vn->name, name);
 
-    if (vnlen + 1 >= (int)sizeof(namebuf) || total_len + 1 >= (int)sizeof(namebuf))
-        return error("ramfs: path too long\n"), -1;
-
-    memcpy(namebuf, vn->name, vnlen);
-    if (!has_slash) namebuf[vnlen] = '/';
-    memcpy(namebuf + (has_slash ? vnlen : vnlen + 1), name, namelen);
-    namebuf[total_len] = '\0';
-
-    __ramfs_normalize_name(namebuf);
-
-    size_t cmp_len = total_len + 1;
-    if (cmp_len > 100) {
-        warn("ramfs: lookup: truncated to 100 chars\n");
-        cmp_len = 100;
-    }
-
-    trace("ramfs: namebuf = %s\n", namebuf);
-
-    ustar_hdr_t *hdr = __ramfs_lookup_ustarhdr(namebuf, cmp_len);
+    cpio_newc_hdr_t *hdr = hashmap_get(&hdr_map, &_temp_name_buf[1]); // CPIO uses filenames without / at the start.
     if (!hdr) {
         *out = NULL;
         return -1;
     }
 
-    int vntype;
-    switch (hdr->typeflag) {
-        case REGTYPE: vntype = VN_FILE; break;
-        case DIRTYPE: vntype = VN_DIR; break;
+    trace("ramfs: Found '%s' (inode %d)!\n", _temp_name_buf, strtoul(hdr->c_ino, 8));
+    int vntype = -1;
+
+    switch (strtoul(hdr->c_mode, 8) & 0170000) {
+        case 0100000: vntype = VN_FILE; break;
+        case 0040000: vntype = VN_DIR;  break;
         default:
-            error("ramfs: unsupported type: %d\n", hdr->typeflag);
+            error("ramfs: '%s' has an unsupported type.\n", _temp_name_buf);
+            *out = NULL;
             return -1;
     }
 
-    vnode_t *new_node = vfs_create_node(namebuf, vntype);
-    if (!new_node) return -1;
-    new_node->inode = __ramfs_ustarhdr_last_inode;
-    new_node->ops = (vntype == VN_DIR) ? &ramfs_dir_ops : &ramfs_file_ops;
-
-    *out = new_node;
+    vnode_t *vn_child = vfs_create_node(_temp_name_buf, vntype);
+    vn_child->parent = vn;
+    vn_child->ops = &ramfs_file_ops;
+    vn_child->inode = strtoul(hdr->c_ino, 8);
+    *out = vn_child;
     return 0;
 }
 
 vnode_t *ramfs_init() {
-    struct limine_file *rfs = limine_get_module(0);
-    if (!rfs) return error("No ramfs provided!\n"), NULL;
+    struct limine_file *cpio = limine_get_module(0);
+    if (!cpio) {
+        error("ramfs: No CPIO archive provided!\n");
+        return NULL;
+    }
 
-    ustar_hdr_t *mhdr = (ustar_hdr_t *)rfs->address;
-    if (memcmp(&mhdr->magic, "ustar", 5) != 0)
-        return error("Module 0 isn't a tape archive! (magic: %s)\n", mhdr->magic), NULL;
+    hashmap_init(&hdr_map, 16);
+    cpio_newc_hdr_t *hdr = (cpio_newc_hdr_t*)cpio->address;
 
-    _ramfs_extend_tarhdr_list();
+    while (1) {
+        if (memcmp(hdr->c_magic, CPIO_MAGIC, 6) != 0) {
+            error("ramfs: Magic check failed. Did you provide a CPIO newc archive?\n");
+            continue;
+        }
 
-    uint64_t addr = (uint64_t)rfs->address;
-    for (int i = 0;; i++) {
-        ustar_hdr_t *hdr = (ustar_hdr_t *)addr;
-        if (hdr->name[0] == '\0') break;
-        __ramfs_normalize_name(hdr->name);
+        if (memcmp((uint8_t*)hdr + sizeof(cpio_newc_hdr_t), "TRAILER!!!", 10) == 0)
+            break;
 
-        if (i >= _tarhdr_list_count)
-            _ramfs_extend_tarhdr_list();
+        uint32_t namesize = strtoul(hdr->c_namesize, 8);
+        uint32_t filesize = strtoul(hdr->c_filesize, 8);
 
-        _tarhdr_list[i] = hdr;
-        trace("ustar: Found '%s'\n", hdr->name);
+        hashmap_put(&hdr_map, (const char *)((uint8_t*)hdr + sizeof(cpio_newc_hdr_t)), hdr);
+        trace("cpio: Found %s\n", (uint8_t*)hdr + sizeof(cpio_newc_hdr_t));
 
-        uint32_t size = __ramfs_octal_to_bin((unsigned char *)hdr->size, 12);
-        addr += ((size / 512) + 1) * 512;
-        if (size % 512) addr += 512;
+        hdr = (cpio_newc_hdr_t*)((uint8_t*)hdr + _ramfs_align4(sizeof(cpio_newc_hdr_t) + namesize) + _ramfs_align4(filesize));
     }
 
     vnode_t *root = vfs_create_node("/", VN_DIR);
-    root->inode = -1;
-    root->ops = &ramfs_dir_ops;
+    root->inode = 0;
     root->parent = root;
+    root->ops = &ramfs_file_ops;
     return root;
 }

@@ -8,5 +8,7 @@
 #pragma once
 
 #include <stddef.h>
+#include <stdint.h>
 
 size_t strlen(const char *str);
+uint32_t strtoul(const char *str, unsigned int len);

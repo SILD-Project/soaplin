@@ -5,4 +5,4 @@
 *.iso
 *.hdd
 compile_commands.json
-root.tar
+root.cpio

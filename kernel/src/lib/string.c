@@ -13,3 +13,19 @@ size_t strlen(const char *str) {
         i++;
     return i;
 }
+
+uint32_t strtoul(const char *str, unsigned int len) {
+    unsigned int result = 0;
+    for (unsigned int i = 0; i < len; i++) {
+        result <<= 4;
+        if (str[i] >= '0' && str[i] <= '9')
+            result |= (str[i] - '0');
+        else if (str[i] >= 'A' && str[i] <= 'F')
+            result |= (str[i] - 'A' + 10);
+        else if (str[i] >= 'a' && str[i] <= 'f')
+            result |= (str[i] - 'a' + 10);
+        else
+            return 0;
+    }
+    return result;
+}
